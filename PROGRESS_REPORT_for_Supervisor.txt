@@ -1,0 +1,408 @@
+================================================================================
+FedMed-BN: Privacy-Preserving Federated Learning for Bangla Medical Text
+Progress Report for Supervisor
+================================================================================
+Date: September 2026
+Author: Muhib
+Status: Implementation in progress (preprocessing complete, training in progress)
+
+This document summarises everything done so far: the datasets, preprocessing
+pipeline, methods, code structure, key functions, experimental setup, results
+to date, problems faced (and their solutions), and the next steps.
+
+
+
+--------------------------------------------------------------------------------
+1. PROJECT OVERVIEW
+--------------------------------------------------------------------------------
+
+Title: FedMed-BN - Privacy-Preserving Federated Learning (FedAvg + Differential
+Privacy) for Named Entity Recognition (NER) of Bangla Medical Text
+
+Goal:
+    Build a medical NER system for Bangla health/medical text using BERT-family
+    models, distributed across 3 simulated hospitals via Federated Learning so
+    that raw patient data never leaves each hospital (privacy by design), and
+    additionally protected with Differential Privacy (Opacus).
+
+Motive (replication study):
+    The project is inspired by the paper:
+        "Federated Learning for Medical Text Classification with Differential
+        Privacy" (FLCMC, Entropy journal, paper entropy-26-00871).
+    That paper applied FL + DP to Chinese medical text in the iFLYTEK data.
+    We replicate the idea for BANGLA medical NER, which is a low-resource
+    language task - making this a novel contribution for a thesis.
+
+Task type:
+    Token-level Named Entity Recognition (sequence tagging) using BIO tagging
+    (B-xxx = beginning of entity, I-xxx = inside entity, O = outside).
+
+
+
+--------------------------------------------------------------------------------
+2. DATASETS USED (3 public Bangladeshi medical corpora)
+--------------------------------------------------------------------------------
+
+We merge THREE different publicly available Bangla medical datasets to build a
+single unified corpus.
+
+Dataset 1: Bengali Medical NER.csv
+    - 8,539 rows.
+    - Columns: Patient ID, Token, Tag, Gazetteers.
+    - Raw tag types: O, V, T, A, Bp, S, D, C, F, Bl, E, nan
+        e.g. V = Vitamin/medicine?, D = Disease, etc. (mapped to unified labels).
+
+Dataset 2: medical_entity_dataset v2.xlsx
+    - 7,254 rows.
+    - Columns: Text (sentence), Medical Entity (the entity span), Label.
+    - Entity labels: Medicine\Chemical Name, Disease, Common Medical Terms,
+      Pharmacological Class, Organ, Hormone.
+
+Dataset 3: annotated_entity_11000_V0.txt
+    - 11,120 lines in BIO format.
+    - Format: token<TAB>tag ; tags: AN_B/AN_I (Anatomy Begin/Inside),
+      DS_B/DS_I (Disease Begin/Inside), O.
+
+Merging strategy:
+    Each dataset's own label vocabulary was mapped into ONE unified set of
+    entity types (see tag mapping below), then converted to standard CoNLL-2003
+    style BIO files.
+
+Unified label set (tag2id / id2tag):
+    DISEASE, MEDICINE, ORGAN, HORMONE, PHARMACOLOGICAL_CLASS,
+    COMMON_MEDICAL_TERMS, SYMPTOM, plus O (outside).
+
+
+
+--------------------------------------------------------------------------------
+3. PREPROCESSING PIPELINE  (script: 01_preprocess_data.py)
+--------------------------------------------------------------------------------
+
+Steps performed:
+    1. Read all 3 raw files of different formats (CSV, XLSX, plain text).
+    2. Clean Bengali text and extract (token, tag) pairs per sentence.
+    3. Map each dataset's raw tags into the unified entity set.
+    4. Combine into one CoNLL-style BIO corpus (unified_bio.txt).
+    5. Split into Centralized baseline set and 3 hospital (client) partitions.
+    6. Simulate NON-IID (non-identically-distributed) data across hospitals:
+       each hospital gets a different disease / medicine / organ focus, exactly
+       like real hospitals which specialise in different departments.
+    7. Save tag2id.json and id2tag.json for consistent label IDs everywhere.
+
+Final corpus statistics (after preprocessing):
+    - Total sentences:        2,241
+        Dataset 1 contribution:   658 sentences
+        Dataset 2 contribution: 1,237 sentences
+        Dataset 3 contribution:   346 sentences
+
+    - Non-IID topic pools created:
+        Disease-heavy  samples: 1,050
+        Medicine-heavy samples:   126
+        Organ-heavy    samples:   204
+        Other          samples:   861
+
+    - Hospital (client) partitions:
+        Hospital 0 (client_0): train 204,  test 52
+        Hospital 1 (client_1): train  84,  test 21
+        Hospital 2 (client_2): train 116,  test 30
+
+    - Centralized baseline partition (all data combined):
+        train 404,  test 103
+
+Generated data files (in /data):
+    unified_bio.txt
+    client_0_train.txt / client_0_test.txt
+    client_1_train.txt / client_1_test.txt
+    client_2_train.txt / client_2_test.txt
+    centralized_train.txt / centralized_test.txt
+    tag2id.json / id2tag.json
+
+Notebook 01 (01_setup_and_data.ipynb) loads this data into Colab and verifies
+it; it ran successfully.
+
+
+
+--------------------------------------------------------------------------------
+4. METHODS & MODELS
+--------------------------------------------------------------------------------
+
+4.1 Base model: BanglaBERT (csebuetnlp/banglabert)
+    - Architecture: ELECTRA-style discriminator, ~110M parameters.
+    - Pre-trained on a 27.5GB Bangla corpus (Bangla2B+).
+    - One of the best publicly available Bangla language models.
+    - Used via HuggingFace Transformers AutoModelForTokenClassification
+      with a randomly-initialised classification head on top.
+
+4.2 Light model for Colab testing: BanglaBERT-small (csebuetnlp/banglabert_small)
+    - ~13M parameters, fits in ~4GB VRAM.
+    - ~1 point F1 lower than full BanglaBERT - used only for quick smoke tests
+      on Google Colab free tier (which has limited RAM).
+
+4.3 NER / Token Classification
+    - Input: sentence tokenized with is_split_into_words=True.
+    - Word-IDs from the tokenizer are used to ALIGN subword tokens with labels.
+    - Subword continuation tokens and special tokens get label -100 (ignored
+      in loss); only the FIRST subword of a word carries the gold label.
+    - Padding to MAX_LENGTH 128 (padding='max_length').
+    - Loss: CrossEntropy (ignored_index=-100) on the classifier head.
+
+4.4 Federated Learning - FedAvg (McMahan et al.)
+    Simulation of 3 hospitals, coordinated by a central server:
+        Round r:
+          1) Server broadcasts global model weights to all clients.
+          2) Each hospital trains locally K epochs on its OWN private data
+             (no raw data ever leaves the hospital).
+          3) Each hospital uploads ONLY its updated model weights.
+          4) Server averages the 3 models (weighted by number of samples) to
+             form the new global model.
+        Repeat for NUM_ROUNDS rounds.
+    Implemented with the Flower framework (start_simulation, NumPyClient).
+
+4.5 Differential Privacy (DP) via Opacus (Facebook AI)
+    Each client adds calibrated Gaussian noise to gradients and clips gradient
+    norms (max_grad_norm=1.0) during local training. This provides a formal
+    privacy guarantee (epsilon, delta). We run 3 DP levels:
+        High privacy:   noise_multiplier = 2.0  => approx epsilon ~ 1
+        Medium privacy: noise_multiplier = 1.1  => approx epsilon ~ 3
+        Low privacy:    noise_multiplier = 0.5  => approx epsilon ~ 8
+    target_delta = 1e-5. Actual epsilon per client printed at runtime via
+    privacy_engine.get_epsilon(delta).
+
+
+
+--------------------------------------------------------------------------------
+5. EXPERIMENTAL DESIGNS / COMPARISONS
+--------------------------------------------------------------------------------
+
+We compare the following methods:
+
+    1. Centralized BanglaBERT (upper bound):
+       Train ONE model on ALL labelled data combined in one place.
+
+    2. FedAvg (no DP):
+       Federated learning across 3 hospitals, no formal privacy.
+
+    3. DP-FedAvg with 3 privacy budgets:  epsilon ~ 1, ~ 3, ~ 8.
+
+Metrics:
+    - Token-level accuracy (ignoring -100 tokens).
+    - Macro F1, Precision, Recall computed with seqeval (BIO-aware).
+
+Evaluation:
+    - Per-client test sets (each hospital evaluates the global model on its own
+      held-out test data) => also shows the non-IID effect.
+    - Training loss convergence over rounds.
+
+Hyper-parameters:
+    - Optimizer: AdamW, lr = 2e-5.
+    - Centralized: EPOCHS = 5, batch_size = 16.
+    - Federated: LOCAL_EPOCHS = 3 per client per round, NUM_ROUNDS = 10,
+      batch_size = 8, drop_last=True.
+    - MAX_LENGTH = 128.
+
+
+
+--------------------------------------------------------------------------------
+6. CODE / FILE STRUCTURE
+--------------------------------------------------------------------------------
+
+Working directory:  C:\Users\muhib\Desktop\New folder - Copy
+
+DOCUMENTS
+    COMPLETE_ROADMAP.md                6-week implementation plan
+    FedMed_BN_*.pdf / .txt             thesis draft
+    entropy-26-00871-v2.pdf / .txt     FLCMC reference paper (Chinese task)
+
+SCRIPTS
+    01_preprocess_data.py              builds unified BIO corpus + non-IID
+                                       client partitions + tag mappings
+
+DATA (generated)  ->  /data/
+    unified_bio.txt, client_0..2_*_*.txt, centralized_*_*.txt,
+    tag2id.json, id2tag.json
+
+NOTEBOOKS  ->  notebooks/
+    01_setup_and_data.ipynb            load + verify data on Colab   [RUN - OK]
+    02_centralized_baseline.ipynb      FULL BanglaBERT centralized    [lab PC]
+    02_centralized_baseline_small.ipynb SMALL BanglaBERT centralized [Colab]
+    03_federated_learning.ipynb        FULL FedAvg + DP              [lab PC]
+    03_federated_learning_small.ipynb  SMALL FedAvg + DP             [Colab]
+    04_results_visualization.ipynb     thesis figures/tables (auto-
+                                       detects small vs full results)
+
+OUTPUT DIRECTORIES (on Colab / Drive)
+    /models/centralized, centralized_small, federated, federated_small,
+             federated_dp, federated_dp_small     (saved best models)
+    /results/  histories (.pkl), curves (.png), comparison_table*.csv,
+               thesis_results_table.csv/.tex
+
+
+
+--------------------------------------------------------------------------------
+7. KEY FUNCTIONS (what each does)
+--------------------------------------------------------------------------------
+
+Data layer
+    load_bio_file(filepath)
+        - Reads a CoNLL BIO file and returns list of sentences, each = list
+          of (token, tag) tuples.
+
+    tokenize_and_align_labels(sentences, tokenizer, max_length=128)
+        - Tokenizes words with is_split_into_words=True and aligns labels to
+          subwords using word_ids(); -100 for subwords/special tokens.
+
+    class NERDataset (torch Dataset)
+        - __getitem__ returns tensor dict: input_ids, attention_mask, labels.
+
+Centralized training (Notebook 2)
+    compute_metrics(preds, labels)
+        - Converts numeric predictions to tag strings, skips -100, returns
+          Precision / Recall / F1 via seqeval, plus true/pred lists.
+    Training loop over EPOCHS:
+        - AdamW optimizer, save model+tokenizer when validation F1 improves
+          (best model saved under /models/centralized*/best_model).
+
+Federated layer (Notebook 3)  -- Flower NumPyClient protocol
+    class BanglaBERTClient(fl.client.NumPyClient):
+        get_parameters(config)        -> export model weights as numpy list
+        set_parameters(parameters)    -> import server weights into model
+        fit(parameters, config)       -> local fine-tune for LOCAL_EPOCHS,
+                                         return new weights + sample count
+        evaluate(parameters, config)  -> evaluate on client test data,
+                                         return loss, count, {accuracy, f1}
+
+    class DPBanglaBERTClient(...):   (DP version)
+        - same as above but fit() wraps optimizer + model + loader with
+          Opacus PrivacyEngine.make_private(noise_multiplier, max_grad_norm)
+        - returns actual epsilon via privacy_engine.get_epsilon(delta)
+
+    client_fn(cid) / dp_client_fn(cid)
+        - Flower factory: builds the client object for a given client id.
+
+    strategy = fl.server.strategy.FedAvg(
+        fraction_fit=1.0, fraction_evaluate=1.0,
+        min_fit_clients=3, min_evaluate_clients=3, min_available_clients=3)
+        - Server-side weighted averaging of client models.
+
+    start_simulation(client_fn, num_clients=3, config=ServerConfig(num_rounds=10),
+                     strategy=..., client_resources={"num_gpus":1.0,"num_cpus":2.0})
+        - Runs the whole federated round loop (Ray backend).
+
+Results layer
+    extract_final_metrics(history, name)   -> last-round accuracy & F1.
+
+
+
+--------------------------------------------------------------------------------
+8. WORK DONE SO FAR (status)
+--------------------------------------------------------------------------------
+
+[x] Read thesis + reference paper, produced roadmap.
+[x] Collected and merged 3 Bangla medical datasets into one unified corpus.
+[x] Built non-IID 3-hospital partitions (Disease/Medicine/Organ specialities).
+[x] Wrote preprocessing script 01_preprocess_data.py (fully reproducible).
+[x] Created the 4 notebooks (fixed JSON formatting bugs triple quotes).
+[x] Notebook 01 (data setup)          - RUN SUCCESSFULLY on Colab.
+[x] Notebook 02 (Centralized baseline, FULL BanglaBERT)
+                                      - RUN SUCCESSFULLY on Colab.
+                                      Best F1 value available in
+                                      results/centralized_results.json.
+[ ] Notebook 03 (FedAvg + DP) full     - BLOCKED on Colab (OOM), to run on lab PC.
+[ ] Notebook 04 (results visualisation)- not run yet.
+
+
+
+--------------------------------------------------------------------------------
+9. PROBLEM FACED & SOLUTION (OOM on Colab)
+--------------------------------------------------------------------------------
+
+Problem:
+    Running Notebook 03 (Flower federated simulation) on Google Colab's free
+    tier caused an OutOfMemoryError. Flower's simulation framework reloads the
+    FULL BanglaBERT model from disk for EVERY client EVERY round
+    (3 clients x 10 rounds = 30 model loads). With Colab free RAM at only
+    12.67 GB (already partly used by the Python kernel + Jupyter language
+    servers ~6 GB), loading the 110M-parameter model repeatedly pushed total
+    memory past 95% and Ray's resource monitor killed the worker processes:
+        "ray.exceptions.OutOfMemoryError: 1 worker(s) were killed due to the
+         node running low on memory ... 12.24GB / 12.67GB".
+    Every fit/evaluate call failed; aggregation reported
+    "received 0 results and 3 failures".
+
+Solution:
+    1) Created BanglaBERT-small (13M params) versions of Notebooks 2 and 3
+       for Colab testing ~20x lighter memory footprint.
+    2) Kept the FULL BanglaBERT versions (110M) intact for the university lab
+       PC, which has much more RAM, so final thesis numbers use the full model.
+    3) Small-run results are saved with _small suffixes (e.g.
+       fedavg_no_dp_history_small.pkl) so Colab runs never overwrite lab-PC
+       runs.
+    4) Notebook 04 now AUTO-DETECTS whether results are small or full and
+       loads the correct files (also fixed a file-naming mismatch in DP
+       history files).
+
+This is a good point to mention to the supervisor: it demonstrates awareness
+of resource constraints and model-size/privacy/performance trade-offs.
+
+
+
+--------------------------------------------------------------------------------
+10. ENVIRONMENT & TOOLS
+--------------------------------------------------------------------------------
+
+Google Colab (free tier):  NVIDIA T4 GPU, ~12.67 GB RAM, Python 3.10.
+Local PC: Windows + PowerShell, Python 3.13, VS Code.
+Libraries:
+    torch, transformers (HuggingFace), seqeval, numpy, pandas, matplotlib,
+    seaborn, flwr (Flower), opacus, scikit-learn, openpyxl.
+Models from HuggingFace Hub: csebuetnlp/banglabert (full),
+                              csebuetnlp/banglabert_small.
+
+
+
+--------------------------------------------------------------------------------
+11. NEXT STEPS
+--------------------------------------------------------------------------------
+
+1. On Colab (smoke test): run 02_centralized_baseline_small + 03_federated_learning_small
+   to verify the full pipeline end-to-end quickly.
+2. On the university lab PC (final): run 02_centralized_baseline (FULL) and
+   03_federated_learning (FULL) with banglabert = csebuetnlp/banglabert,
+   producing the official thesis numbers.
+3. Run Notebook 04 to generate all thesis figures/tables (loss convergence,
+   per-round accuracy, privacy-utility trade-off, per-client performance,
+   per-entity F1, summary chart, results table).
+4. Write up Chapter 5 (results) and Chapter 6 (conclusions) in the thesis.
+
+Deliverables produced automatically by the code:
+    - Best centralized model (full + small)
+    - FedAvg / DP-FedAvg histories and convergence plots
+    - Privacy-Utility trade-off plot (F1 vs epsilon)
+    - Comparison table (accuracy / F1 per method)
+    - thesis_results_table.csv and .tex for the thesis document
+
+
+
+--------------------------------------------------------------------------------
+12. ONE-PARAGRAPH SUMMARY (for verbal explanation to supervisor)
+--------------------------------------------------------------------------------
+
+"We are building FedMed-BN: a privacy-preserving federated learning system for
+Bangla medical named-entity recognition. We merged three public Bangla medical
+datasets into one unified BIO-annotated corpus (2,241 sentences) and split it
+into three non-IID hospital partitions simulating real medical specialities
+(disease / medicine / organ). As a baseline we trained a centralized BanglaBERT
+model on all data combined. For the federated part we implemented FedAvg with
+the Flower framework so each hospital trains only on its private data and
+shares only model weights, and we add Differential Privacy using Opacus by
+clipping gradient norms and injecting calibrated Gaussian noise. We evaluate
+three privacy budgets (epsilon ~ 1, 3, 8) and compare macro-F1 between the
+centralized baseline, FedAvg without DP, and DP-FedAvg. The preprocessing,
+the centralized baseline, and the small-model test pipeline are complete; the
+full-model federated experiments are ready to run on the university lab PC,
+and the results-visualisation notebook is prepared to generate all thesis
+figures."
+
+================================================================================
+END OF PROGRESS REPORT
+================================================================================

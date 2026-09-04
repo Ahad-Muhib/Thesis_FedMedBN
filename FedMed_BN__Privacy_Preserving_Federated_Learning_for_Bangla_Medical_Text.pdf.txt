@@ -1,0 +1,3954 @@
+--- Page 1 ---
+FedMed-BN: Privacy-Preserving Federated
+Learning for Bangla Medical Text
+Submitted in Partial Fulfillment of the Requirements for the Degree of
+Bachelor of Science in Computer Science and Engineering of the
+University of Asia Pacific
+by
+Muhib Al Ahad
+Roll: 22201207
+Faiza Haque Shoily
+Roll: 22201183
+Tanjuma Noor
+Roll: 22201210
+Supervised by:
+Shammi Akhtar
+Assistant Professor
+Co-supervised by:
+Md Shafayatul Haque
+Lecturer
+Department of Computer Science & Engineering
+University of Asia Pacific
+November 2026
+
+--- Page 2 ---
+Declaration
+We, hereby, declare that the work presented in this Thesis is the outcome of the investiga-
+tion performed by us under the supervision of Ms. Shammi Akhtar, Assistant Professor,
+Department of Computer Science, University of Asia Pacific. We also declare that no
+part of this Thesis and thereof has been or is being submitted elsewhere for the award of
+any degree or Diploma.
+Countersigned
+(Ms. Shammi
+Akhtar)
+Supervisor
+Signature
+................................
+Faiza Haque Shoily
+................................
+Muhib Al Ahad
+................................
+Tanjuma Noor
+i
+
+--- Page 3 ---
+Acknowledgements
+First of all, we would like to express our deepest gratitude to Almighty Allah, the Most
+Benevolent and Most Merciful, for granting us the strength, patience, knowledge, and
+opportunity to complete this thesis successfully.
+We would like to express our sincere gratitude to our respected supervisor, Ms. Shammi
+Akhtar, Assistant Professor of Computer Science & Engineering, University of Asia Pa-
+cific for her constant supervision, helpful cooperation and constructive remarks during
+this research. Her encouragement and academic assistance were very important to the
+successful completion of this thesis FedMed-BN: Privacy-Preserving Federated Learning
+for Bangla Medical Text.
+We are also thankful to Md Shafayatul Haque and all our respected teachers and professors
+of the Department of Computer Science and Engineering, University of Asia Pacific, whose
+teachings, resources, and academic support have contributed greatly to our learning and
+growth.
+Finally, we express our heartfelt gratitude to our families for their constant love, pa-
+tience, understanding, and encouragement. Their support has been a source of strength
+throughout our academic life and during the completion of this thesis.
+ii
+
+--- Page 4 ---
+Abstract
+Sharing medical data across hospitals could unlock huge advances in healthcare AI, but
+it comes with a real problem: patient records are sensitive, and no institution can simply
+hand over raw data to build a shared model. This tension between collaboration and
+privacy is exactly what motivated this work. To navigate it, we turned to Federated
+Learning (FL), an approach that lets multiple hospitals train a shared model together
+while each one keeps its own patient data locally, never sending it anywhere.
+We applied this idea to Bangla medical text, a space that has been largely overlooked.
+While English has been the focus of most medical NLP research, with vast datasets and
+pretrained models readily available, Bangla has not received the same attention, despite
+being spoken by hundreds of millions of people. This gap means that many of the tools
+clinicians and researchers rely on in English simply don’t exist for Bangla, and patients
+whose records are written in Bangla are effectively left out of these advances. Motivated
+by this gap, we developed FedMed-BN, a privacy-preserving federated learning frame-
+work built specifically for Bangla medical text.
+We see this work as more than a technical exercise. By bringing together healthcare
+NLP and federated learning in a language that has been underserved, FedMed-BN aims
+to be a genuine step toward more inclusive medical AI, one that could eventually support
+better prescription analysis, disease classification, and clinical documentation tools for
+Bangla-speaking communities, without asking hospitals to compromise on patient privacy
+to get there.
+iii
+
+--- Page 5 ---
+Contents
+List of Figures
+ix
+List of Tables
+x
+1
+Introduction
+1
+1.1
+Background and Motivation . . . . . . . . . . . . . . . . . . . . . . . . .
+1
+1.2
+Problem Statement . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1
+1.3
+Objectives of the Project . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2
+1.4
+Research Questions Guiding the Investigation
+. . . . . . . . . . . . . . .
+2
+1.5
+Scope of the Work
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4
+1.6
+Expected Outcomes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+5
+1.7
+Impacts of the Project . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+5
+1.7.1
+Impact on Societal and Cultural Issues . . . . . . . . . . . . . . .
+5
+1.7.2
+Impact on Health, Safety, and Legal Issues . . . . . . . . . . . . .
+6
+1.7.3
+Impact on Environment and Sustainability Issues . . . . . . . . .
+6
+1.8
+Report Organization
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+7
+2
+Background and Literature Review
+9
+iv
+
+--- Page 6 ---
+2.1
+Preliminaries
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+9
+2.2
+Related Works / Existing Systems . . . . . . . . . . . . . . . . . . . . . .
+11
+2.3
+Comparative Analysis of Related Works
+. . . . . . . . . . . . . . . . . .
+14
+2.4
+Research Gap / Limitations of Existing Methods
+. . . . . . . . . . . . .
+17
+2.5
+Contribution . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+18
+2.6
+Summary
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+18
+3
+System Analysis and Design
+20
+3.1
+Requirement Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+20
+3.1.1
+Questionnaires
+. . . . . . . . . . . . . . . . . . . . . . . . . . . .
+20
+3.1.2
+Functional and Non-Functional Requirements
+. . . . . . . . . . .
+22
+3.1.3
+Stakeholder Engagement Evidence
+. . . . . . . . . . . . . . . . .
+23
+3.2
+System Overview / Architecture . . . . . . . . . . . . . . . . . . . . . . .
+24
+3.2.1
+High-Level Architecture
+. . . . . . . . . . . . . . . . . . . . . . .
+24
+3.2.2
+Detailed Design Diagrams . . . . . . . . . . . . . . . . . . . . . .
+25
+3.2.3
+Design Alternatives and Rationale . . . . . . . . . . . . . . . . . .
+26
+3.3
+Algorithmic Flow / Pseudocode / Mathematical Model . . . . . . . . . .
+27
+3.4
+Summary
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+27
+4
+Methodology and Implementation
+28
+4.1
+Methodological Framework . . . . . . . . . . . . . . . . . . . . . . . . . .
+28
+4.2
+Tools, Libraries, and Technologies Used . . . . . . . . . . . . . . . . . . .
+30
+v
+
+--- Page 7 ---
+4.3
+Data Collection . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+31
+4.4
+Preprocessing Steps . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+33
+4.5
+Model Development / Algorithm Design
+. . . . . . . . . . . . . . . . . .
+35
+4.6
+System Implementation / Modules Description . . . . . . . . . . . . . . .
+37
+4.7
+Hardware and Software Requirements . . . . . . . . . . . . . . . . . . . .
+38
+4.8
+Summary
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+42
+5
+Results and Evaluation
+43
+5.1
+Experimental Setup . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+43
+5.2
+Performance Metrics . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+43
+5.3
+Result Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+43
+5.4
+Comparison with Baseline / Existing Approaches
+. . . . . . . . . . . . .
+43
+5.5
+Discussion on Findings . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+43
+5.6
+Limitations
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+43
+6
+Project Planning and Budget
+44
+6.1
+Project Timeline
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+44
+6.2
+Budget Estimation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+45
+6.3
+Summary
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+45
+7
+Standards and Design Constraints
+46
+7.1
+Compliance with Standards and Professional Practice . . . . . . . . . . .
+46
+7.1.1
+Software Standard
+. . . . . . . . . . . . . . . . . . . . . . . . . .
+46
+vi
+
+--- Page 8 ---
+7.1.2
+Hardware Standard . . . . . . . . . . . . . . . . . . . . . . . . . .
+46
+7.1.3
+Others . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+46
+7.2
+Design Constraints . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+46
+7.2.1
+Ethical and Professional Responsibilities . . . . . . . . . . . . . .
+46
+7.2.2
+Environmental and Sustainability Considerations
+. . . . . . . . .
+47
+7.2.3
+Health and Safety Considerations . . . . . . . . . . . . . . . . . .
+47
+7.3
+Complex Engineering Problem (CEP) Coverage . . . . . . . . . . . . . .
+47
+7.4
+Complex Engineering Activities (CEA) Coverage . . . . . . . . . . . . . .
+48
+7.5
+Summary
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+51
+8
+Conclusion and Future Work
+52
+8.1
+Summary of the Work
+. . . . . . . . . . . . . . . . . . . . . . . . . . . .
+52
+8.2
+Key Findings and Contributions . . . . . . . . . . . . . . . . . . . . . . .
+52
+8.3
+Limitations of the Study . . . . . . . . . . . . . . . . . . . . . . . . . . .
+53
+8.4
+Recommendations and Future Work . . . . . . . . . . . . . . . . . . . . .
+53
+Appendix A Source Code
+59
+Appendix B Team Responsibilities
+60
+Appendix C Ethics and Compliance Statements
+62
+Appendix D Expert Consultation Evidence
+64
+Appendix E Evidences of CEP
+70
+vii
+
+--- Page 9 ---
+Appendix F Evidences of CEA
+71
+viii
+
+--- Page 10 ---
+List of Figures
+3.1
+High-Level Architecture of FedMed-BN . . . . . . . . . . . . . . . . . . .
+25
+3.2
+Differential Privacy Mechanism at Each Client (DP-FedAvg) . . . . . . .
+26
+3.3
+Federated Learning Round Structure in FedMed-BN . . . . . . . . . . . .
+26
+4.1
+FedMed-BN Five Step Methodology Framework . . . . . . . . . . . . . .
+28
+4.2
+Data Preprocessing Pipeline for FedMed-BN . . . . . . . . . . . . . . . .
+34
+4.3
+BanglaBERT Model Architecture with Classification Head (Proposed) . .
+35
+4.4
+FedMed-BN System Modules and Their Planned Responsibilities . . . . .
+37
+D.1 Expert Consultation Evidence – Shayela Begum (Part 1) . . . . . . . . .
+65
+D.2 Expert Consultation Evidence - Shayela Begum (Part 2)
+. . . . . . . . .
+66
+D.3 Expert Consultation Evidence - Zakir Hossain (Part 1) . . . . . . . . . .
+66
+D.4 Expert Consultation Evidence - Zakir Hossain (Part 2) . . . . . . . . . .
+67
+D.5 Expert Consultation Evidence - Nasima Kamal (Part 1) . . . . . . . . . .
+68
+D.6 Expert Consultation Evidence - Nasima Kamal (Part 2) . . . . . . . . . .
+69
+ix
+
+--- Page 11 ---
+List of Tables
+2.1
+Summary of Related Work in Federated Learning for Medical/Biomedical
+NLP . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+14
+3.1
+Expert Evaluators Consulted for FedMed-BN Requirement Analysis . . .
+20
+3.2
+Interview Questions and Generalized Expert Responses . . . . . . . . . .
+21
+3.3
+Functional and Non-Functional Requirements
+. . . . . . . . . . . . . . .
+22
+3.4
+Expert Consultation Evidence . . . . . . . . . . . . . . . . . . . . . . . .
+23
+4.1
+Tools, Libraries, and Technologies Used . . . . . . . . . . . . . . . . . . .
+30
+4.2
+Dataset Description . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+32
+4.3
+Hardware Recommendation
+. . . . . . . . . . . . . . . . . . . . . . . . .
+39
+4.4
+Software Requirements . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+40
+6.1
+Overview of Time Estimation
+. . . . . . . . . . . . . . . . . . . . . . . .
+44
+6.2
+Overview of Cost Estimation . . . . . . . . . . . . . . . . . . . . . . . . .
+45
+7.1
+Mapping of Knowledge Profiles (Ks) addressed through this research . . .
+47
+7.2
+Mapping with Complex Engineering Problems (Ps)
+. . . . . . . . . . . .
+49
+7.3
+Mapping of Complex Engineering Activities (As) to project implementation 50
+B.1 Team Member Responsibilities . . . . . . . . . . . . . . . . . . . . . . . .
+60
+E.1
+Evidences of CEP . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+70
+F.1
+Evidences of CEA . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+71
+x
+
+--- Page 12 ---
+Chapter 1
+Introduction
+1.1 Background and Motivation
+In Bangladesh, the swift digitalization of healthcare has resulted in an explosion of un-
+structured clinical text in Bangla, including prescriptions, symptom descriptions, dis-
+charge summaries and electronic health record (EHR) notes. Despite this demographic
+scale, Bangla is significantly underrepresented in the medical NLP literature, a disparity
+that remains even when compared to languages with much smaller speaker populations
+but more established clinical NLP infrastructures [20]. This underrepresentation is fur-
+ther aggravated by a structural constraint inherent to the Bangladeshi healthcare system.
+Clinical data is dispersed across hospitals, diagnostic chains and specialist clinics which
+operate as isolated institutional silos due to confidentiality obligations, patient privacy
+considerations and the absence of a unified national health data policy. Consequently,
+centralized aggregation of such data for model training is rendered both ethically un-
+tenable and practically infeasible, rendering conventional deep learning pipelines - which
+presuppose centralized data access-fundamentally incompatible with the operational re-
+alities of Bangladeshi clinical informatics. This study is motivated by the imperative to
+address this dual gap by developing high-performance Bangla clinical NLP methods that
+obviate the need for raw patient data to leave its institutional source [9].
+1.2 Problem Statement
+The primary concern that this work addresses is the simultaneous occurrence of three
+connected issues, namely, the lack of effective Bangla-specific clinical language models,
+the inability to centralize sensitive patient data across institutions, and the vulnerabil-
+1
+
+--- Page 13 ---
+ity of standard decentralized training approaches to adversarial reconstruction attacks,
+known as gradient leakage. While current Federated Learning (FL) frameworks are de-
+signed to avoid sharing raw data, advanced inference attacks have been shown to be able
+to mathematically invert private text sequences from transmitted model weight updates
+[15]. Thus, network isolation alone is insufficient to ensure the confidentiality of patients.
+Taken together, these three issues define a problem that no existing approach fully re-
+solves: an effective clinical NLP solution for Bangla must simultaneously (i) achieve
+competitive performance on a morphologically rich, low-resource language, (ii) operate
+under the institutional, legal, and ethical constraints that prevent centralized data pool-
+ing in Bangladeshi healthcare, and (iii) provide a formal, quantifiable privacy guarantee
+that holds even against adversaries with access to the shared model updates themselves
+[21]. This research is positioned to address this composite problem directly, rather than
+treating any one of its dimensions in isolation.
+1.3 Objectives of the Project
+To address these overlapping challenges, this research pursues the following objectives.
+First, it establishes a Federated Learning framework specifically optimized for unstruc-
+tured Bangla medical text, simulating a realistic multi-institutional hospital environment
+using distributed data partitions. Second, the system utilizes a technique referred to
+as differentially private federated averaging (DP-FedAvg), where calibrated Gaussian
+noise is added to the gradients of the local models before their aggregates are per-
+formed by the server. it fine-tunes a pre-trained Bangla transformer model-specifically
+csebuetnlp/banglabert-for Bangla medical named entity recognition (NER), identifying
+entities such as Disease, Medicine, Organ, Hormone, Pharmacological Class, and Com-
+mon Medical Terms. Fourth, it evaluates model convergence and stability under Non-IID
+data distributions, which arise naturally when different institutions exhibit different di-
+agnostic patterns and documentation styles.
+1.4 Research Questions Guiding the Investigation
+This study is guided by the following research questions (RQs), organized around five core
+dimensions: correct application of subject-specific concepts, logical consistency, validity
+2
+
+--- Page 14 ---
+and justification, innovation and contribution, and overall quality of the proposed system.
+RQ Group 1: Correct Application of Subject-Specific Concepts
+RQ1.1 Does FedMed-BN correctly apply Federated Learning principles (local training,
+parameter sharing, central aggregation) rather than merely simulating distributed
+training without true data isolation?
+RQ1.2 Is BanglaBERT an appropriate and correctly utilized pretrained model for pro-
+cessing Bangla medical text?
+RQ1.3 Is the FedAvg aggregation mechanism implemented and explained correctly, par-
+ticularly with respect to weighted averaging by client data size?
+RQ Group 2: Logical Consistency
+RQ2.1 Does the choice of a federated (rather than centralized) architecture logically
+follow from the privacy-sensitivity of medical text?
+RQ2.2 Is the use of non-IID (heterogeneous) client data simulation logically consistent
+with how real Bangladeshi clinics or devices would differ from one another?
+RQ2.3 Does the evaluation plan (federated vs. centralized baseline comparison) logically
+support the project’s privacy-preservation claims?
+RQ2.4 Are the limitations acknowledged by the team consistent with the architecture
+chosen (e.g., communication cost, non-IID challenges)?
+RQ Group 3: Validity and Justification
+RQ3.1 Is there sufficient justification for choosing BanglaBERT over alternatives such
+as mBERT or XLM-RoBERTa?
+RQ3.2 Is the privacy-preservation claim adequately justified given that only architec-
+tural separation (without formal differential privacy or encryption) is used?
+RQ3.3 Is the simulated client partitioning method adequately explained and justified?
+RQ3.4 Are the performance metrics (accuracy, F1-score, precision, recall) appropriate
+and justified for evaluating Bangla medical NER specifically?
+3
+
+--- Page 15 ---
+RQ Group 4: Innovation and Contribution
+RQ4.1 Does the project address a genuine gap in the literature, given that most feder-
+ated NLP/medical studies focus on English (e.g., MIMIC-III, i2b2) or generic text
+classification benchmarks?
+RQ4.2 Does the project respond meaningfully to future-work directions explicitly raised
+in prior literature (e.g., extending FL to low-resource, non-English languages)?
+RQ4.3 Is there a clear, realistic practical application for this work within the Bangladeshi
+healthcare context?
+RQ Group 5: Overall Quality
+RQ5.1 Does the combination of FedAvg and BanglishBERT represent a technically
+sound and coherent solution to the stated problem?
+RQ5.2 Are the project’s stated limitations and future work realistic and proportionate
+to its current stage of development?
+RQ5.3 Would this work constitute a meaningful and publishable contribution to feder-
+ated NLP for low-resource medical text?
+1.5 Scope of the Work
+The work is restricted to Bangla medical named entity recognition (NER), performed
+on Bangla-language clinical text drawn from the Bangla-MedER and BanglaBioMed cor-
+pora. One pre-trained Bangla transformer backbone, csebuetnlp/banglabert, is fine-tuned
+within the federated setting; the design and pre-training of these base models is outside
+the scope of this work. The multi-institutional environment is simulated in software using
+five distributed data partitions that emulate realistic, non-IID hospital data distributions;
+the study does not involve deployment within actual hospital infrastructure or live pa-
+tient data. Privacy protection is provided through DP-FedAvg, with the privacy budget
+formalized using the (ε, δ)-differential privacy definition; other privacy-enhancing tech-
+niques, such as secure multi-party computation or homomorphic encryption, are noted
+in the literature but are not implemented here.
+Finally, the study is limited to the
+4
+
+--- Page 16 ---
+textual modality of clinical data; medical imaging, structured tabular EHR fields, and
+speech-based clinical data are not considered.
+1.6 Expected Outcomes
+This research is expected to produce an end-to-end Federated Learning pipeline tailored
+to Bangla medical text, in which differential privacy is incorporated as a first-class design
+component rather than an afterthought. Unlike the overwhelming majority of existing
+Bangla clinical NLP studies, which require all training data to be pooled in a single
+location, the proposed framework is expected to demonstrate that collaborative model
+training across five simulated hospital nodes is achievable without any raw text ever leav-
+ing its local environment. The work is also expected to yield a structured experimental
+benchmark built on established Bangla clinical corpora, including the Bangla-MedER
+and BanglaBioMed datasets, partitioned under realistic Non-IID constraints to simulate
+genuine institutional heterogeneity. A further expected outcome is a quantifiable and
+auditable measure of patient data protection, expressed through the (ε, δ)-differential
+privacy budget, that makes the trade-off between privacy and utility explicit and ad-
+justable. Collectively, these outcomes are intended to establish a replicable blueprint
+for privacy-preserving medical NLP in other low-resource linguistic contexts, with par-
+ticular relevance for South and Southeast Asian healthcare systems facing similar data
+fragmentation and linguistic diversity challenges.
+1.7 Impacts of the Project
+Beyond its technical contributions, this project carries implications that extend into so-
+cietal, health and legal, and environmental domains. The following subsections outline
+these broader impacts.
+1.7.1 Impact on Societal and Cultural Issues
+By targeting Bangla—a language spoken natively by over 170 million people in Bangladesh
+and more than 230 million people worldwide—this project works toward closing a long-
+standing technological gap that has left Bangla-speaking patients underserved by modern
+clinical AI tools [11]. Improved Bangla clinical NLP capability can, over time, support
+5
+
+--- Page 17 ---
+better documentation, retrieval, and decision-support tools for clinicians who work pri-
+marily in Bangla, rather than forcing reliance on English-centric systems [24]. This has
+a cultural dimension as well: it affirms that native-language clinical documentation does
+not need to be a barrier to adopting advanced AI tools, and it contributes to the broader
+movement toward linguistic inclusion in NLP research and digital health infrastructure
+[30, 26].
+1.7.2 Impact on Health, Safety, and Legal Issues
+The federated, privacy-preserving design of this work is directly motivated by patient
+safety and legal considerations. By ensuring that raw patient text never leaves its insti-
+tutional source, and by formalizing a quantifiable (ε, δ) privacy budget, the framework is
+intended to reduce the risk of patient re-identification or data exposure relative to con-
+ventional centralized training pipelines [2]. This is particularly relevant in Bangladesh,
+where institutional confidentiality obligations and patient privacy ethics already constrain
+data sharing, even in the absence of a single comprehensive national health data policy.
+At the same time, any system that processes drug names, dosages, and disease identi-
+fiers carries health and safety responsibilities. The NER and classification capabilities
+developed in this work are intended as decision-support aids that can assist clinicians
+and researchers in structuring unstructured notes, not as an autonomous diagnostic au-
+thority; outputs would require clinical validation before influencing patient care decisions
+[25, 3]. Care has also been taken to evaluate model performance under realistic, non-IID
+conditions, so that reported accuracy is not artificially inflated by favorable, idealized
+data distributions.
+1.7.3 Impact on Environment and Sustainability Issues
+Training and fine-tuning transformer-based language models carries a computational,
+and therefore energy, cost, and the federated setting used here introduces additional
+communication overhead from repeated rounds of model-update exchange between sim-
+ulated hospital nodes and the central server. This project mitigates some of this cost by
+fine-tuning existing pre-trained Bangla transformer backbones rather than training large
+models from scratch, and by working with modestly sized clinical corpora rather than
+web-scale data.
+6
+
+--- Page 18 ---
+More broadly, the federated approach itself has a sustainability rationale: because raw
+data never has to be duplicated, transferred, and stored centrally, this design avoids the
+storage and transmission overhead—and corresponding energy footprint—of large-scale
+centralized data pooling [13, 8]. In this sense, the privacy-preserving architecture in-
+vestigated in this work also aligns with the goal of building clinical AI infrastructure
+that scales sustainably across multiple institutions, rather than depending on ever-larger
+centralized repositories of sensitive data.
+1.8 Report Organization
+The remainder of this report is organized as follows:
+• Chapter 1 introduces the background and motivation, problem statement, objec-
+tives, research questions, scope, expected outcomes, and broader impacts of the
+project.
+• Chapter 2 presents the background theory of Federated Learning, Differential Pri-
+vacy, and transformer-based Bangla NLP, followed by a detailed literature review,
+comparative analysis of related works, and the identified research gap.
+• Chapter 3 covers the requirement analysis (including stakeholder questionnaires
+and functional/non-functional requirements), the system architecture, detailed de-
+sign diagrams, and the design alternatives considered for FedMed-BN.
+• Chapter 4 describes the methodology and implementation, including the tools and
+libraries used, data collection and preprocessing, model development, and system
+implementation details.
+• Chapter 5 presents the experimental setup, performance metrics, result analysis,
+and limitations of the evaluation.
+• Chapter 6 outlines the project planning and budget, including the project timeline
+and cost estimation.
+• Chapter 7 maps the project to relevant engineering standards and accreditation
+requirements, covering Complex Engineering Problem (CEP) and Complex Engi-
+neering Activity (CEA) attributes.
+7
+
+--- Page 19 ---
+• Chapter 8 concludes the report with a summary of key findings and contributions,
+limitations of the study, and recommendations for future work.
+8
+
+--- Page 20 ---
+Chapter 2
+Background and Literature Review
+This chapter presents the theoretical foundation and reviews related research relevant
+to our project on Privacy-Preserving Federated Learning for Bangla Medical Text. It
+begins with essential concepts and definitions in the Preliminaries, followed by a detailed
+survey of existing systems. The chapter then compares these methods, highlights their
+limitations, and identifies research gaps addressed by our proposed system.
+2.1 Preliminaries
+In this chapter we outline the basic ideas that will allow us to use FedMed-BN.
+Federated Learning (FL)
+Federated Learning was introduced by Google [14] for supporting the data privacy-
+sensitive character of distributed learning. It allows multiple clients to collaborate in
+training a single model of shared knowledge, without having to share any client’s raw
+data. Instead, each party trains the model individually on their own data and shares
+only the changes they made to the model since the last round — called “updates” or
+“gradients” — with the other parties. The changes are aggregated by the central server,
+which then returns the updated global model to all parties. This process is repeated for
+multiple communication rounds.
+Formally, FedAvg minimizes the global objective:
+F(w) =
+K
+X
+k=1
+nk
+n Fk(w),
+Fk(w) = 1
+nk
+X
+i∈Pk
+fi(w)
+(2.1)
+where K is the number of participating clients, nk is the number of data samples held by
+9
+
+--- Page 21 ---
+client k, n = P
+k nk is the total number of samples across all clients, Pk denotes the set
+of data indices on client k, and fi(w) is the loss of the model parameters w on sample i.
+Differential Privacy (DP)
+Differential Privacy guarantees that no matter how much information is contained in
+an algorithm’s output, it cannot be determined whether any individual has contributed,
+or whether any individual’s data was used. To achieve differential privacy in federated
+learning, gradients are clipped and Gaussian noise is added before sharing model updates
+with the server. The DP-FedAvg algorithm calculates:
+¯∆t = 1
+L
+
+X
+k∈St
+clip
+
+∆t
+k, C
+
++ N
+
+0, σ2C2I
+
+
+,
+wt+1 = wt + ¯∆t
+(2.2)
+where St is the set of L clients sampled at round t, ∆t
+k is the model update from client
+k, C is the clipping norm bound, and σ is the noise multiplier controlling the strength of
+the Gaussian noise N(0, σ2C2I) added to the aggregated update.
+Transformer Models and BanglaBERT
+BERT (Bidirectional Encoder Representations from Transformers) is a type of pre-trained
+language model that uses learning to acquire rich contextual representations of text.
+BanglaBERT is a BERT based pre-trained model that has been trained using large
+amounts of Bangladeshi written text.
+As such, it can capture the structural aspects
+of the Bangla language and then fine tune the model for specific downstream tasks by at-
+taching task specific heads; for example, we attach a token classification head to recognize
+medical entities such as Disease, Medicine, and Organ in Bangla clinical text.
+Non-IID Data in Federated Learning
+In a real-world federated learning environment, the data from one client to the next is
+rarely independent and identically distributed; it is non-IID. Take hospitals for exam-
+ple: they will have their own mix of patients and diseases as well as distinct ways of
+documenting them. Such heterogeneity poses a difficulty for federated training, which is
+precisely the sort of issue our system is built to handle with the DP-FedAvg framework.
+10
+
+--- Page 22 ---
+2.2 Related Works / Existing Systems
+Previous studies in federated learning applied to medical NLP are diverse. We review the
+existing research in three categories: federated NLP systems, privacy-preserving federated
+learning, and Bangla medical NLP.
+Federated Learning for Medical Text Classification
+Chen et al. [12] present FLCMC, a federated learning approach to Chinese medicinal
+text categorization. FedPA and FedPAP - perturbed federated algorithms - were intro-
+duced and evaluated on the IMCS-V2 dialogue dataset across simulated non-IID clients.
+FedPAP reached a peak accuracy of 0.79, indicating that federated techniques are able
+to perform on par with centralized baselines in medical text. However, their paper is
+entirely on Chinese text and no differential privacy is used.
+Huang et al. [18] proposed a federated ICD-10 classification system with PubMedBERT
+across three Taiwanese hospitals as distinct data silos. The federated model achieved
+an F1-score of 0.812, a 3.11% improvement over the single-hospital baseline. The study
+shows the real-world utility of federated BERT models in the clinic, but the authors admit
+that differential privacy had not been included or integrated at the time of writing.
+Liu et al. [28] addressed communication efficiency in federated text classification with
+FedInitPrune, a parameter pruning algorithm. When applied to a federated TextCNN
+setup, this resulted in a 74.26% reduction in communication parameters and a less than
+2% decrease in accuracy, representing a significant real-world benefit for resource-limited
+hospital settings.
+Agrawal et al. [27] performed an extensive systematic literature review of federated
+learning for NLP tasks, covering FedAvg, FedProx, FedAdam, LSTM, and BERT-based
+methodologies across different datasets. The review highlights key issues such as non-IID
+data heterogeneity, communication restrictions, and the inherent privacy–performance
+trade-off.
+Hasan et al. [19, 2] classified medical prescriptions using an OCR pipeline (EAST detector
+with Tesseract) combined with rule-based NLP tagging, reporting 93–95% accuracy on
+white-prescription detection; although not federated, the work illustrates the domain-
+specific preprocessing challenges typical of clinical text.
+Dligach and Miller [9] proposed a two-stage federated NLP pipeline that first learns
+11
+
+--- Page 23 ---
+patient representations with a Deep Averaging Network and then performs federated
+phenotyping, achieving an F1-score statistically equivalent to a centralized baseline on
+MIMIC-III and the i2b2 Obesity Challenge dataset, without any differential privacy mech-
+anism.
+Zhao et al. [35] explored personalized federated text classification through gradient-free
+prompt tuning with a genetic algorithm, reducing communication cost by roughly 1000×
+relative to gradient-based FL while remaining competitive in accuracy, though at the
+cost of heavier local (edge) computation. In the relation-extraction setting, [30] intro-
+duced FedED, a federated ensemble-distillation approach for medical relation extraction
+that avoids sharing raw gradients between clients, further demonstrating that federated
+strategies can be adapted across different medical NLP sub-tasks beyond classification.
+Privacy-Preserving Federated Learning
+Lyu et al. [31] introduced a privacy-preserving federated learning approach integrating
+Local Differential Privacy (LDP), bitwise quantization, and feature hashing for natural
+language processing on edge nodes. On sentiment analysis and rating prediction tasks,
+they showed that this was possible without costly embeddings, although how well the
+approach performs on challenging medical NLP tasks has not been validated.
+Ahmed et al. [37] proposed a privacy-preserving edge-aggregated federated model using
+Shamir’s Secret Sharing for healthcare severity classification. The proposed hierarchical
+aggregation with dynamic edge thresholding showed promising privacy protections on
+the MIMIC-III dataset, but the authors acknowledge that the method does not currently
+extend to medical text or NLP tasks.
+Gawali et al. [4] performed federated deep learning for lung cancer segmentation across 12
+hospitals in 8 countries using Personal Health Train infrastructure. Their research shows
+that cross-institutional federated learning without data leaving a hospital is practically
+possible, but communication lags due to slow hospital connections remain an issue.
+Rahman et al. [14] introduced FedHealth-NLP, integrating FedBERT with differential
+privacy and a knowledge graph neural network for community health literacy.
+Their
+method obtained an accuracy of 91.3% across four community health datasets, 4.4%
+better than FedAvg+BERT and, at the same time, 42% less communication cost.
+12
+
+--- Page 24 ---
+In-Depth FL Evaluation for Biomedical NLP
+Shen et al. [29] systematically evaluated FL across eight biomedical NLP corpora, includ-
+ing NER and relation extraction, observing that FL models consistently outperformed
+single-client training and notably outperformed LLMs (GPT-4, PaLM 2) in the few-shot
+prompting scenario as well. Importantly, they identified federated learning with differen-
+tial privacy as a research opportunity but did not implement it themselves.
+Gao et al. [10] introduced FedCliMask, an ontology-guided semantic masking framework
+using UMLS concept hierarchies for clinical NLP. They implemented a federated train-
+ing approach in which four levels of semantic masking using ClinicalBERT on synthetic
+hospital notes indicated the possibility of meaningful privacy–utility tradeoffs. However,
+they did not implement their full federated training pipeline.
+General Medical Text Classification and NLP Techniques
+Beyond federated and privacy-preserving settings, a broader body of work has studied
+medical text classification in the (non-federated) centralized setting, and this line of re-
+search informs the modeling choices used in FedMed-BN. [20] compared several deep
+learning architectures for classifying unstructured medical notes under varying degrees of
+class imbalance, a challenge that is directly relevant to non-IID federated clients. [11] con-
+ducted a systematic review of NLP techniques for biomedical document classification, cat-
+aloguing feature representations ranging from bag-of-words to transformer embeddings.
+[25] applied linguistic-feature-driven supervised deep learning to unstructured medical
+text classification, while [3] presented an end-to-end text classification pipeline built on
+state-of-the-art NLP models.
+Closer to the prescription-processing angle of [19], [26]
+performed medical text extraction and classification directly from prescription images,
+combining OCR with downstream NLP classification. Taken together, these centralized
+studies establish strong non-federated baselines but, like the federated works reviewed
+above, none of them jointly address federation, differential privacy, and low-resource lan-
+guages.
+Bangla Medical NLP
+Islam et al. [7] presented BanglaBioMed, the first Bangla biomedical NER corpus, from
+BioNLP@ACL 2022. BanglaBERT obtained the best F1-score of 81.33% on this corpus,
+13
+
+--- Page 25 ---
+covering anatomy, chemicals/drugs, disease/symptom, and medical procedure entities.
+The proposed corpus and the performance achieved by BanglaBERT both indicate the
+suitability of transformer-based NLP approaches for Bangla biomedical text.
+Dhar et al. [38] introduced a hybrid internal feature approach, considering word length
+and English-equivalent terms as features for categorizing Bangla medical text documents.
+The proposed SGD classifier obtained 97.75% accuracy in binary medical vs. non-medical
+classification. This is one of the earliest works in Bangla medical text categorization.
+2.3 Comparative Analysis of Related Works
+Table 2.1 summarizes and compares the reviewed works across dataset, method, focus,
+performance, and key limitations.
+Table 2.1: Summary of Related Work in Federated Learning for Medical/Biomedical NLP
+Research
+Year
+Dataset
+Method
+/
+Model
+Main Focus
+Performance
+/
+Strength
+Limitation
+Chen et al.
+(FLCMC)
+[12]
+2024
+IMCS-V2
+(4,116
+doctor-patient
+dialogues, 10 pe-
+diatric
+diseases);
+Synthetic non-IID
+datasets
+FLCMC;
+FedPA
+(Perturbed Adam
+Federated
+Learn-
+ing)
+Federated
+med-
+ical
+text
+clas-
+sification
+for
+Chinese
+medici-
+nal dialogue
+FedPAP:
+0.79
+accuracy,
+0.48
+loss;
+Competitive
+with
+centralized
+baselines
+No
+differential
+privacy;
+Chinese
+only;
+text-only;
+large
+model
+deployment
+im-
+practical on edge
+clients
+Hasan
+et
+al.
+(Medical
+Prescrip-
+tion) [19]
+2019
+∼800,000
+text
+rows from medical
+prescriptions;
+White
+Prescrip-
+tion
+dataset
+(75/25 split)
+OCR
+(EAST
++
+Tesseract); Super-
+vised
+ML
+Clas-
+sifier;
+Damerau-
+Levenshtein
+spelling
+correc-
+tion;
+Rule-based
+NLP tagging
+NLP-based
+tag-
+ging of medical
+prescriptions
+using OCR and
+rule-based
+tag-
+ging
+93–95%
+accuracy
+in white prescrip-
+tion
+detection;
+Only
+0.5%
+re-
+quired
+manual
+intervention
+Manual
+rule
+creation
+time-
+consuming;
+30%
+initially
+unclas-
+sifiable;
+Limited
+to
+prescription
+domain only
+Dligach et
+al.
+(Two-
+stage Fed.
+Phenotyp-
+ing) [9]
+2019
+MIMIC-III
+(58,000+
+ad-
+missions);
+i2b2
+Obesity Challenge
+(1,237
+discharge
+summaries)
+Two-stage
+Feder-
+ated
+NLP:
+Deep
+Averaging
+Net-
+work
+(DAN)
+for
+patient
+represen-
+tation + federated
+phenotyping clas-
+sifier
+Federated
+pa-
+tient
+pheno-
+typing
+and
+representation
+learning
+across
+hospitals
+with-
+out data sharing
+Fully federated F1
+=
+0.724;
+Statis-
+tically
+equivalent
+to centralized ap-
+proach
+Impractical
+for
+rare
+conditions;
+Cannot
+directly
+compare
+to
+i2b2
+benchmarks; Data
+heterogeneity
+across hospitals
+14
+
+--- Page 26 ---
+Zhao et al.
+(Gradient-
+Free
+Prompt
+Tuning)
+[35]
+2024
+SST-2,
+AG’s
+News,
+TREC;
+split into 10–100
+non-IID silos
+RoBERTa-large
++
+Genetic
+Al-
+gorithm
+(GA)
+for
+personalized
+federated
+local
+prompt optimiza-
+tion
+Personalized
+federated
+text
+classification
+with
+gradient-
+free
+prompt
+tuning
+Reduced
+commu-
+nication
+cost
+by
+1000x;
+Competi-
+tive
+accuracy
+vs
+gradient-based FL
+baselines
+GA
+computa-
+tionally
+intensive
+on
+edge
+devices;
+Heavily
+depen-
+dent
+on
+initial
+prompt templates
+Islam et al.
+(BanglaBioMed)
+[27]
+2022
+BanglaBioMed:
+818
+sentences,
+11,196
+tokens;
+4
+entity
+types;
+70/10/20
+train/-
+val/test split
+BanglaBERT,
+mBERT,
+XLM-
+RoBERTa
+fine-
+tuned for Bangla
+biomedical NER
+First
+Bangla
+biomedical NER
+corpus and base-
+line evaluation
+BanglaBERT
+F1
+= 81.33% (best);
+Outperforms
+mBERT
+and
+XLM-RoBERTa
+No
+federated
+learning;
+No pri-
+vacy
+mechanism;
+Small dataset (818
+sentences); Entity
+class imbalance
+Huang
+et
+al.
+(ICD-
+10 FL) [31]
+2023
+Multicenter
+EMRs from 3 Tai-
+wanese
+hospitals
+(NTUH,
+FEMH,
+VGHTPE)
+as
+3
+silos
+Federated
+Pub-
+MedBERT,
+BioBERT,
+Clin-
+icalBERT
+with
+Label Attention
+Federated
+ICD-
+10
+classification
+across real hospi-
+tal silos
+Federated
+Pub-
+MedBERT
+F1
+=
+0.812
+(3.11%
+improvement over
+single-hospital
+baseline)
+No
+differential
+privacy;
+Non-IID
+challenges
+from
+varying
+hospital
+styles; High local
+compute required
+Liu et al.
+(FedInit-
+Prune)
+[37]
+2022
+Fudan
+Chinese
+Text
+Classifi-
+cation
+Dataset;
+THUCNews
+FedW2V + Feder-
+ated TextCNN +
+FedInitPrune (pa-
+rameter
+pruning
+algorithm)
+Communication-
+efficient
+fed-
+erated
+text
+classification
+via
+parameter
+pruning
+74.26%
+reduction
+in communication
+parameters
+with
+less
+than
+2%
+accuracy drop vs
+FedAvg
+No privacy mecha-
+nism; Pruning ra-
+tio manually cho-
+sen; Chinese only;
+Does not address
+model heterogene-
+ity
+Ahmed
+et
+al.
+(FL
+Healthcare
+Big
+Data)
+[4]
+2025
+TB
+Chest
+X-ray
+images
+(Kaggle):
+7,000 images;
+10
+simulated
+client
+nodes
+ResNet
+(pri-
+mary); DenseNet;
+SqueezeNet;
+FedAvg
+with
+SMOTE for class
+balancing
+Privacy-
+preserving
+federated
+deep
+learning
+for
+distributed
+healthcare
+TB
+diagnosis
+ResNet: 96.7% ac-
+curacy, 97.4% F1-
+score; ROC AUC
+= 0.97
+Single
+imaging
+modality
+only;
+SMOTE may in-
+troduce
+artifacts;
+No DP; No NLP
+component
+Agrawal et
+al.
+(FL-
+NLP SLR)
+[15]
+2024
+Gboard,
+Stack
+Overflow,
+Shake-
+speare,
+UCI
+Spam,
+20
+News,
+IMDB,
+Senti-
+ment140, CoLA
+Survey
+of
+Fe-
+dAvg,
+FedProx,
+FedAdam, LSTM,
+RNN,
+GPT-2,
+BERT, NMF
+Systematic
+re-
+view of FL-based
+NLP
+across
+prediction,
+clas-
+sification,
+and
+generation
+92%
+spam
+clas-
+sification;
+76%
+ternary sentiment;
+51.49%
+search
+suggestions
+Survey
+only;
+Non-English
+NLP
+underex-
+plored;
+Privacy-
+performance
+trade-off
+unre-
+solved
+Lyu et al.
+(LDP-FL
+NLP) [38]
+2023
+IMDB Movie Re-
+views (sentiment);
+MovieLens
+with
+keywords
+(rating
+prediction)
+LDP
++
+Bitwise
+Quantization
++
+Feature
+Hash-
+ing;
+Privacy-
+preserving FL for
+NLP on edge de-
+vices without raw
+data collection
+Feasible privacy-
+preserving
+FL
+on edge without
+resource-heavy
+embeddings
+Competitive
+ac-
+curacy
+without
+resource-heavy
+embeddings
+Rolling-hash loses
+semantic richness;
+LDP
+noise
+de-
+grades
+accuracy;
+Not validated on
+medical NLP
+15
+
+--- Page 27 ---
+Ahmed
+et
+al.
+(Edge-
+FL Health-
+care) [21]
+2025
+Synthetic
+health-
+care data + real
+MIMIC-III
+ICU
+dataset
+Hierarchical
+FL
+with
+Shamir’s
+Secret
+Shar-
+ing
+(SMPC)
++
+dynamic
+edge
+thresholding
+Privacy-
+preserving
+severity
+clas-
+sification
+in
+healthcare
+via
+secure
+edge
+ag-
+gregation
+Strong privacy via
+SMPC; Evaluated
+with accuracy, F1,
+confusion
+matrix
+across 5 runs
+Structured/tabular
+data only — no
+NLP; No fairness
+or explainability
+Gawali
+et
+al.
+(PHT
+/
+FedCT)
+[33]
+2025
+Lung cancer chest
+CT scans from 12
+hospitals, 8 coun-
+tries,
+2,078
+pa-
+tients
+FedAvg
++
+Per-
+sonal
+Health
+Train
+(PHT)
+/
+Vantage6 with Se-
+cure
+Aggregation
+Server
+Real-world cross-
+institutional
+FL
+for
+lung
+cancer
+GTV
+segmenta-
+tion
+Feasibility
+across
+12 real hospitals;
+No
+patient
+data
+left any institution
+during training
+Imaging
+only
+—
+not NLP; No for-
+mal
+DP;
+Bottle-
+necked by slowest
+hospital
+Rahman
+et
+al.
+(FedHealth-
+NLP) [24]
+2025
+HealthLit-Urban
+(45,230
+docs);
+RuralHealth-USA
+(23,456
+docs);
+MultiLingual-
+Health
+(67,890
+docs);
+Commu-
+nityEngagement
+(31,245 docs)
+FedBERT + DP
+gradient
+aggre-
+gate
++
+PKGNN
+(Knowledge
+Graph NN) cross-
+modal
+attention
+fusion
+Federated
+NLP
+with DP for com-
+munity
+health
+literacy enhance-
+ment
+91.3%
+accuracy,
+F1
+=
+0.898;
++4.4%
+over
+pFedMe;
+42%
+communication
+reduction
+Simulated
+nodes
+—
+not
+real
+de-
+ployment;
+DP
+reduces
+accuracy
+by 0.8%; English
+only
+Shen
+et
+al.
+(FL
+Biomedi-
+cal
+NLP)
+[22]
+2024
+8 biomedical NLP
+corpora: BC2GM,
+BC4CHEMD,
+JNLPBA,
+NCBI-
+disease
+(NER);
+EUADR,
+GAD,
+n2c2 (RE)
+FedAvg, FedProx;
+BERT, BioBERT,
+BlueBERT,
+Bio_ClinicalBERT,
+GPT-2, BiLSTM-
+CRF
+Systematic eval-
+uation of FL on
+biomedical NER
+and relation ex-
+traction
+FL
+>
+single-
+client;
+FedProx
+F1
+=
+0.994
+un-
+der
+non-IID;
+FL
+significantly
+outperforms
+GPT-4/PaLM
+2
+few-shot
+Simulated
+splits
+—
+not
+real
+FL;
+Horizontal
+FL
+only;
+No DP or
+homomorphic
+encryption
+inte-
+grated
+Patel et al.
+(FedCli-
+Mask) [10]
+2025
+12,996
+synthetic
+clinical
+notes
+(Synthea)
+across
+6
+simulated
+US
+hospital types
+UMLS
+ontology-
+guided
+4-level
+semantic masking
++
+ClinicalBERT
+NER + proposed
+CA-FedAvg
+Context-
+aware
+FL
+with
+ontology-guided
+masking
+for
+privacy-utility
+balance in clini-
+cal NLP
+Level
+2
+mask-
+ing
+identified
+as
+optimal
+privacy-
+utility balance; 6
+hospital
+profiles
+successfully differ-
+entiated
+CA-FedAvg
+pro-
+posed
+but
+not
+implemented;
+Synthetic
+data
+only;
+English
+only;
+No
+formal
+DP guarantees
+Each of the reviewed techniques has its own set of useful attributes as well as significant
+disadvantages. Prescription-based and rule-based NLP systems are very accurate but
+can only be applied to their specific domain. Federated phenotyping approaches show
+that FL is comparable to centralized performance for clinical text, but it does not come
+with privacy-enhancing mechanisms other than data locality. Parallel techniques such as
+FedInitPrune can dramatically cut down on transmission expenses, but only in a single
+language and without any privacy protection whatsoever. Medical imaging FL systems
+16
+
+--- Page 28 ---
+like the TB diagnosis framework and the PHT lung cancer study prove feasibility in a real-
+world setting, but cannot be applied to text-based NLP tasks across hospital networks.
+We also evaluate privacy-preserving frameworks, such as LDP-FL and FedHealth-NLP,
+in which differential privacy is combined with federated NLP and evaluated on English
+datasets. The extensive biomedical NLP evaluation by Shen et al. also demonstrates that
+FL consistently outperforms single-client training and LLMs under few-shot prompting,
+and explicitly notes that the integration of DP is an open challenge. On the Bangla side,
+BanglaBioMed and Dhar et al. establish strong baselines for Bangla medical NLP, but
+neither is equipped with federated learning or privacy protection, making them difficult
+to deploy in real multi-institutional settings. Overall, these methods represent good indi-
+vidual approaches, but none cover all the needs of differential privacy, federated training,
+and low-resource Bangla medical NLP, which is what FedMed-BN addresses.
+2.4 Research Gap / Limitations of Existing Methods
+The literature review clearly shows a notable research gap. Although federated learning
+has been used for medical NLP in English and Chinese, federated learning and differential
+privacy have not been combined for Bangla medical text in particular. We were motivated
+by the following gaps to develop FedMed-BN:
+1. Language gap: All the FL medical NLP systems we reviewed work on English and
+Chinese. Bangla, despite having 230 million speakers, does not have any federated
+medical NLP framework.
+2. Privacy gap: Most federated medical NLP systems do not integrate differential
+privacy, which makes them susceptible to gradient leakage attacks.
+3. Domain gap: Existing Bangla medical NLP works operate in centralized settings
+and have no privacy protection, making them unfeasible for real multi-hospital
+deployment.
+4. Resource gap: There is currently no system that takes into consideration the
+federated learning challenges of a low-resource language like Bangla, specifically in
+the medical domain.
+17
+
+--- Page 29 ---
+FedMed-BN tackles all four gaps by integrating DP-FedAvg with BanglaBERT for privacy-
+preserving Bangla medical named entity recognition.
+2.5 Contribution
+This work contributes to the research gap identified in Section 2.4 as follows:
+1. First ever federated learning approach for Bangla named entity recog-
+nition. Although federated learning has been well studied in English (MIMIC-III,
+i2b2) and Chinese (IMCS-V2), no system has been developed to use federated
+learning for Bangla clinical and biomedical texts. FedMed-BN is placed as the first
+attempt to remove this language barrier of Bangla medical NER.
+2. Formal, quantifiable privacy guarantee, not just architectural separation.
+The majority of federated medical NLP systems discussed in Section 2.2 (such as
+Chen et al.
+3. Linking Bangla medical NLP to a true multi-institutional context. The
+current Biomedical NER Bangla (BanglaBioMed
+4. A federated benchmark for Bangla clinical health care that is reusable.
+This work proposes a benchmark setup, which is built on realistic non-IID client
+shards of Bangla-MedER and BanglaBioMed and recognize the entity types like
+Disease, Medicine, Organ, Hormone, Pharmacological Class, and Common Medi-
+cal Terms, so that future Bangla clinical NLP research can build upon this setup
+without designing another federated setup from scratch.
+Combined, these contributions address the four gaps (language, privacy, domain, and
+resource) identified in Section 2.4, making FedMed-BN different from all the surveyed
+systems in this chapter.
+2.6 Summary
+In this chapter, we reviewed the theoretical foundations of federated learning, differential
+privacy, and transformer-based NLP. Significant achievements in medical text processing
+18
+
+--- Page 30 ---
+were identified through a literature survey of federated NLP architectures. The compar-
+ison of existing systems revealed a gap: no existing system combines federated learning
+with differential privacy for Bangla medical NLP. The proposed FedMed-BN framework
+is directly motivated by this gap, which will be explained in the following chapters.
+19
+
+--- Page 31 ---
+Chapter 3
+System Analysis and Design
+3.1 Requirement Analysis
+3.1.1 Questionnaires
+To construct a model that meets the expert’s needs, we held several interviews to evaluate
+the functional and non-functional requirements of our proposed model. The mentionable
+experts that we interviewed are:
+Name
+Occupation
+Contact Info
+Shayela Begum
+Physician
+shayelabegum69@gmail.com
+Zakir Hossain
+Surgeon
+zplastic61@gmail.com
+Nasima Kamal
+Doctor
+nasimakamal1972@gmail.com
+Table 3.1: Expert Evaluators Consulted for FedMed-BN Requirement Analysis
+Below is the table of questions and the generalized answers received from the conducted
+interviews:
+In future, we plan to conduct additional expert interviews as needed during development
+to ensure the model meets user needs.
+20
+
+--- Page 32 ---
+Question
+Feedback
+Does the project correctly apply Fed-
+erated Learning principles (local train-
+ing, parameter sharing, central aggre-
+gation) rather than simply simulating
+distributed training without true data
+isolation?
+Yes, local training with no raw data
+sharing is essential for patient privacy.
+s BanglaBERT an appropriate and
+correctly used pretrained model for
+Bangla medical text?
+Absolutely, BanglaBERT is pre-trained
+on a large Bangla corpus, making it
+well-suited for understanding Bangla
+medical terminology and clinical text.
+Is the FedAvg aggregation mechanism
+implemented and explained correctly
+(e.g., weighted averaging by client data
+size)?
+Yes, weighting by data size makes sense
+when hospitals have very different pa-
+tient volumes.
+Does the choice of a federated (rather
+than centralized) architecture logically
+follow from the privacy-sensitivity of
+medical text?
+Absolutely, centralizing patient records
+would raise serious privacy and compli-
+ance concerns.
+Is the use of non-IID (heterogeneous)
+client data simulation logically consis-
+tent with how real Bangladeshi clinic-
+s/devices would differ from each other?
+Yes, every clinic sees different patients
+and writes notes differently, so this is
+realistic.
+Is
+there
+sufficient
+justification
+for
+choosing BanglaBERT over alterna-
+tives
+such
+as
+mBERT
+or
+XLM-
+RoBERTa?
+Yes,
+but a direct comparison with
+mBERT and XLM-RoBERTa would
+strengthen the justification.
+Is the privacy-preservation claim ade-
+quately justified given that only archi-
+tectural separation (no formal DP/en-
+cryption yet) is used?
+Partially,
+architectural
+separation
+helps, but formal privacy guarantees
+would be needed for real deployment.
+Does the project address a genuine gap
+in the literature, given that most feder-
+ated NLP/medical studies focus on En-
+glish (MIMIC-III, i2b2) or generic text
+classification benchmarks?
+Yes, Bangla medical NLP is underex-
+plored, so this fills a real need.
+Is there a clear, realistic practical appli-
+cation for this work in the Bangladeshi
+healthcare context?
+Yes, this could genuinely help hospitals
+and clinics collaborate without sharing
+sensitive patient data.
+Table 3.2: Interview Questions and Generalized Expert Responses
+21
+
+--- Page 33 ---
+3.1.2 Functional and Non-Functional Requirements
+The functional and non-functional requirements were distilled from a review of closely
+related literature on federated learning for medical/biomedical NLP, insights from the
+replicated baseline experiments, and questionnaires from expert interviews, with each
+requirement converted into a concise, testable statement with clear acceptance criteria.
+Table 3.3: Functional and Non-Functional Requirements
+ID
+Description
+Collected
+From
+FR-1
+The system shall train the BanglishBERT model lo-
+cally on each simulated client’s Bangla-English medi-
+cal text without transmitting raw patient data to the
+central server.
+Expert-1,
+Expert-2
+FR-2
+The system shall aggregate client model updates at
+the central server using FedAvg, weighted by each
+client’s local data size.
+Expert-1,
+Expert-2,
+Expert-3
+FR-3
+The system shall accept Bangla medical text as in-
+put and identify medical entities such as Disease,
+Medicine, Organ, Hormone, Pharmacological Class,
+and Common Medical Terms.
+Expert-1,
+Expert-2,
+Expert-3
+FR-4
+The system shall support partitioning the dataset
+into non-IID client shards to simulate realistic varia-
+tion across different clinics or devices.
+Expert-1,
+Expert-3
+FR-5
+The system shall compute accuracy and perplexity
+metrics separately for the federated model and a cen-
+tralized baseline to enable direct comparison.
+Expert-2,
+Expert-3
+NFR-1
+The system shall ensure raw patient text never leaves
+the local client during training; only model weight
+updates shall be transmitted.
+Expert-1,
+Expert-2
+NFR-2
+The system shall remain compatible with alter-
+native pretrained models (e.g.,
+mBERT, XLM-
+RoBERTa) to allow substitution and comparison
+against BanglaBERT.
+Expert-3
+NFR-3
+The system shall minimize communication overhead
+between clients and the central server across training
+rounds.
+Expert-2,
+Expert-3
+NFR-4
+The system shall ensure all experiments are repro-
+ducible through fixed random seeds and clearly doc-
+umented hyperparameters.
+Expert-1,
+Expert-3
+22
+
+--- Page 34 ---
+3.1.3 Stakeholder Engagement Evidence
+The research team engaged with multiple stakeholders to validate requirements and en-
+sure methodological rigor.
+Key Insights
+The expert consultations highlighted several important recommendations that guided the
+development of the proposed framework. The key insights are summarized below:
+• Shayela Begum: Through questionnaires, she gave feedback on the clinical rele-
+vance of the Bangla-English medical text samples and recommended incorporating
+real-world prescription phrasing to improve the practical applicability of the feder-
+ated model.
+• Zakir Hossain: Focused on the privacy implications of handling patient text across
+distributed clients, and emphasized the importance of clearly documenting what
+data leaves the local client versus what remains on-device.
+• Nasima Kamal: Reviewed the proposed framework and suggested prioritizing
+evaluation against realistic non-IID clinic data distributions, since real Bangladeshi
+healthcare settings vary significantly in patient volume and note-taking style.
+Table 3.4: Expert Consultation Evidence
+Date
+Expert Name
+Affiliation
+Purpose
+[28-05-
+2026]
+Shayela
+Be-
+gum
+Physician
+Guidance
+on
+clinical
+relevance
+of
+Bangla-
+English
+medical
+text
+samples and prescrip-
+tion phrasing.
+[04-06-
+2026]
+Zakir
+Hos-
+sain
+Surgeon
+Consultation
+on
+pri-
+vacy
+implications
+and client-side versus
+server-side
+data
+han-
+dling.
+[24-07-
+2026]
+Nasima
+Ka-
+mal
+Doctor
+Expert review focusing
+on non-IID data real-
+ism and evaluation de-
+sign.
+23
+
+--- Page 35 ---
+Evidence and Documentation
+Supporting evidence for requirement identification, including stakeholder consultation
+summaries, is provided in Appendix D.
+3.2 System Overview / Architecture
+This section describes the overall architecture of FedMed-BN. To accommodate several
+simulated hospital clients to train a shared BanglaBERT-based medical text classifier
+without sharing any raw patient information, the system has been designed as a data
+privacy-preserving federated learning pipeline.
+3.2.1 High-Level Architecture
+At a high level, FedMed-BN consists of five simulated hospital clients (Hospital A through
+E) and a central aggregation server. Each client has its own partition of the Bangla med-
+ical text dataset, which is non-overlapping. Throughout the round of communications,
+clients update their local model using their own data and add Gaussian noise and gra-
+dient clipping to protect their information, then return only the differentially private
+updates to the central server. These updates are compiled using FedAvg on the server,
+and then the aggregated global model is sent back to all the clients. This continues for
+T communication rounds.
+The high-level block diagram of FedMed-BN is presented in Fig. 3.1.
+24
+
+--- Page 36 ---
+Figure 3.1: High-Level Architecture of FedMed-BN
+3.2.2 Detailed Design Diagrams
+The system is described in more detail in the following diagrams. The Differential Privacy
+mechanism is applied at each client before sending the model updates to the server, as
+shown in Figure 3.2.
+Gradients are first clipped to have a norm bound C and then
+Gaussian noise is added to provide formal (ϵ, δ)-DP guarantees.
+The entire federated learning round structure is shown in Figure 3.3. The server broad-
+casts the global model once a round, each client trains locally with DP, sends updates to
+the server, and the server performs FedAvg aggregation. This is repeated for T rounds
+until convergence.
+25
+
+--- Page 37 ---
+Figure 3.2: Differential Privacy Mechanism at Each Client (DP-FedAvg)
+Figure 3.3: Federated Learning Round Structure in FedMed-BN
+3.2.3 Design Alternatives and Rationale
+In the design stage of the system, multiple architecture options were considered. mBERT
+(multilingual BERT) and BanglaBERT were considered as the base language model.
+26
+
+--- Page 38 ---
+BanglaBERT was chosen because it is pre-trained using a large Bangla text corpus,
+which ensures it has a better grasp of the medical vocabulary and Bangla morphology
+than generic multilingual models.
+Both FedAvg and FedProx were considered for the federated aggregation algorithm. Fe-
+dAvg was selected because it is simple and popular, and it has been demonstrated to
+work well in non-IID environments where sufficient local training steps can be provided.
+Future research could consider FedProx in more extreme data heterogeneity situations.
+Two privacy mechanisms were considered: Local Differential Privacy (LDP) and Central
+Differential Privacy via the Gaussian Mechanism. The choice of central DP was made
+because it achieves better model utility at the same privacy budget, as the noise is only
+added once during aggregation rather than once per data point.
+3.3 Algorithmic Flow / Pseudocode / Mathematical Model
+Content will be added in future.
+3.4 Summary
+The entire system analysis and design of FedMed-BN was presented in this chapter.
+The functional and non-functional requirements were obtained from literature and were
+recorded in two different tables with measurable boundaries for the target values. The
+high-level and detailed design diagrams explained the training of a BanglaBERT-based
+medical NER model by the five simulated hospital clients in a collaborative manner
+without sharing raw patient data using DP-FedAvg. Various design options were assessed
+and reasoned. The design alternatives were evaluated and the final architectural choices
+were justified. The next chapter describes the implementation of this design in detail.
+27
+
+--- Page 39 ---
+Chapter 4
+Methodology and Implementation
+4.1 Methodological Framework
+FedMed-BN follows a five step methodology that begins with collecting the dataset and
+ends with evaluating the trained model. The proposed framework is designed to build a
+privacy preserving federated learning system for Bangla medical text classification while
+maintaining a fixed privacy budget. The complete workflow of the proposed methodology
+is shown in Fig. 4.1. The overall design is inspired by recent studies on federated learning
+for healthcare and biomedical natural language processing [22, 15, 38, 33].
+Figure 4.1: FedMed-BN Five Step Methodology Framework
+The methodology starts by selecting suitable Bangla medical text datasets for training
+and evaluation. The primary dataset is the Bangla MedER Multi BERT dataset, which
+contains annotated Bangla medical text, while additional supporting datasets are used
+28
+
+--- Page 40 ---
+to improve the diversity of the data [28, 27, 32]. To simulate a real healthcare environ-
+ment, the primary dataset is divided into five separate groups representing five different
+hospitals. Each hospital receives a different distribution of medical specialties instead
+of identical data. This creates a more realistic setting because hospitals usually focus
+on different medical departments and therefore do not contain exactly the same type of
+patient records.
+After the dataset is divided, the text data is prepared for model training. The Bangla
+medical text is cleaned by removing unnecessary characters and formatting errors. The
+cleaned text is then tokenized using the BanglaBERT tokenizer so that it can be processed
+by the language model. The medical specialty labels are converted into integer class values
+because machine learning models require numerical labels during training. Finally, the
+processed data of each hospital is divided into training and testing sets, which are used
+in the following stages of the framework.
+Once the data preparation is complete, the classification model is created. A pretrained
+BanglaBERT model available through Hugging Face is selected as the backbone of the
+proposed system because it is specifically designed for the Bangla language. A simple
+linear classification layer is added to the output of the CLS token.
+The size of this
+classification layer depends on the total number of medical specialty categories available
+in the dataset. The same model architecture is shared by all participating hospitals so
+that every client trains an identical model during federated learning [18, 3].
+The next part of the methodology performs federated training with differential privacy.
+At the beginning of each communication round, the central server sends the latest global
+model to all participating hospitals. Each hospital trains the model using only its own
+local data without sharing any patient information with the server. During local training,
+gradient clipping is applied and calibrated Gaussian noise is added to the gradients before
+the updated model parameters are transmitted back to the server. These privacy pre-
+serving techniques help reduce the possibility of exposing sensitive medical information
+while maintaining model performance. The server collects the updated parameters from
+all hospitals and combines them using the Federated Averaging algorithm to generate a
+new global model. This process continues for a fixed number of communication rounds
+until the training is completed [31, 4, 38, 21, 23].
+29
+
+--- Page 41 ---
+Finally, the trained global model is evaluated using the testing data from each partic-
+ipating hospital. The performance of the model is measured using accuracy, precision,
+recall, and F1 score. To study the effect of privacy protection on model performance, the
+complete training process is repeated using different privacy budget values represented
+by different epsilon values. The experimental results are then compared to observe the
+relationship between classification performance and privacy preservation. This evalua-
+tion helps determine whether the proposed FedMed BN framework can achieve strong
+predictive performance while protecting sensitive medical information [22, 15, 33].
+4.2 Tools, Libraries, and Technologies Used
+Table 4.1: Tools, Libraries, and Technologies Used
+Tool / Library
+Version
+Role / Justification for Use
+Python
+3.8 or above
+Main programming language used to build
+the whole FedMed-BN system, including
+data preprocessing, model training, and
+federated simulation.
+PyTorch
+1.x / 2.x
+Deep learning framework used to design,
+train, and evaluate the Bangla medical
+text classification model on each client.
+Flower
+(FL
+Framework)
+Latest stable
+Federated learning framework used to
+simulate multiple clients, manage commu-
+nication rounds, and handle model ag-
+gregation between clients and the central
+server.
+BNLP Toolkit
+Latest stable
+Bangla natural language processing li-
+brary used for tokenization, stemming,
+and cleaning of Bangla medical text.
+30
+
+--- Page 42 ---
+Tool / Library
+Version
+Role / Justification for Use
+Indic
+NLP
+Li-
+brary
+Latest stable
+Used to support Bangla text normaliza-
+tion, since Bangla medical text often has
+inconsistent spelling and mixed script is-
+sues.
+BanglaBERT
+/
+BengFastText
+Embeddings
+Pre-trained
+Pre-trained Bangla language embeddings
+used to convert Bangla medical text into
+numerical vectors that the model can un-
+derstand.
+NumPy
+Compatible
+with Python
+3.8
+Used for numerical operations and han-
+dling of data arrays during preprocessing
+and model training.
+Pandas
+Compatible
+with Python
+3.8
+Used to load, organize, and manage the
+Bangla medical text dataset in tabular
+form before training.
+Scikit-learn
+Compatible
+with Python
+3.8
+Used for splitting data into train and test
+sets, and for calculating evaluation met-
+rics such as accuracy and F1 score.
+Matplotlib
+/
+Seaborn
+Compatible
+with Python
+3.8
+Used to visualize training results, such as
+accuracy and loss curves across communi-
+cation rounds.
+Google
+Colab
+/
+Jupyter
+Note-
+book
+Latest stable
+Development environment used to write,
+test, and run the federated learning ex-
+periments.
+GPU
+Hardware
+Acceleration
+(CUDA)
+Compatible
+with
+avail-
+able GPU
+Used to speed up model training, espe-
+cially for deep learning based Bangla text
+classification.
+4.3 Data Collection
+For this project, no new data will be collected or generated, and FedMed-BN uses only
+existing publicly available medical text datasets from Bangla, that have already been
+31
+
+--- Page 43 ---
+identified and collected [28, 27]. Unfortunately, there is no pre-existing federated Bangla
+medical dataset, so the primary dataset will be divided into non-overlapping non-IID
+client silos to create a realistic federated hospital environment [12, 15]. Table 4.2 gives
+a description of the three datasets collected to date, all real, collected data and not
+synthetic text.
+Table 4.2: Dataset Description
+Dataset
+Source
+/
+Year
+Contents
+Use Case
+Type
+Bangla
+MedER
+(Multi-
+BERT) [32]
+PLOS
+One,
+Sept
+2025
+6,895
+real-world
+medi-
+cal observations with dis-
+ease/specialty labels
+Primary
+dataset
+for
+classification
+task
+Real
+(Col-
+lected)
+BanglaBioMed
+[27]
+ACL
+BioNLP
+2022
+818 sentences, 11,196 to-
+kens; 4 biomedical entity
+types (Anatomy,
+Drug,
+Disease, Procedure)
+Secondary
+dataset;
+used
+for pre-training
+support
+Real
+(Col-
+lected)
+Bangla-
+MedER [28]
+Mendeley,
+Oct 2025
+2,980 annotated Bangla
+medical
+statements,
+14,357 tokens
+Additional
+NER
+sup-
+port and data
+augmentation
+Real
+(Col-
+lected)
+The main dataset Bangla MedER (Multi-BERT) from PLOS One [32], September 2025,
+consists of 6,895 real medical observations with disease and specialty labels. This infor-
+mation will be segmented into 5 individual segments, labeled A through E, for Hospitals
+A through E. The split will be done in a non-IID way with each client getting a class
+distribution different from the other, to mimic the real-world specialization pattern of
+hospitals [12, 15]. This kind of non-uniform partitioning is important because in prac-
+tice, medical data from different hospitals is rarely evenly distributed, and the federated
+model needs to be tested under these realistic conditions [38].
+It is intended that BanglaBioMed [27] and the Mendeley Bangla-MedER set [28] will be
+used as auxiliary resources to supplement exposure to biomedical entities and terminolo-
+gies, and not as the resources for the classification labels themselves. BanglaBioMed pro-
+32
+
+--- Page 44 ---
+vides gold-standard, professionally verified annotations across four entity types, namely
+Anatomy, Chemicals or Drugs, Disease or Symptom, and Medical Procedure, which makes
+it useful for improving the model’s understanding of biomedical vocabulary before it is
+exposed to the main classification task [27].
+Similarly, the Mendeley Bangla-MedER
+dataset, with its manually curated annotations across six entity types including Medicine,
+Organ, Disease, Hormone, Pharmacological Class, and Common Medical Terms, will
+help strengthen the model’s grasp of Bangla medical terminology through additional
+pre-training and data augmentation [28].
+Since all three datasets originate from different sources and were annotated using different
+labeling conventions, a standardization step is required before they can be used together
+in the same pipeline [8].
+This ensures that entity types and classification labels are
+represented consistently, even though the underlying datasets were built independently
+for different original purposes. By combining one primary dataset for classification with
+two auxiliary datasets for biomedical entity exposure, this approach allows FedMed-BN
+to simulate a realistic, privacy-preserving federated hospital environment while working
+within the current limitations of publicly available Bangla medical NLP resources [12, 33]
+4.4 Preprocessing Steps
+Raw Bangla medical texts will be preprocessed using the following pipeline before feder-
+ated training begins. As the project is still in the report-writing phase, no steps have yet
+been implemented, so Figure 4.2 shows each step that is intended.
+33
+
+--- Page 45 ---
+Figure 4.2: Data Preprocessing Pipeline for FedMed-BN
+1. Raw Input: The pipeline will start from the raw Bangla medical text records in the
+primary dataset [32] (6,895 observations).
+2.
+Text Cleaning: Special characters and irrelevant symbols will be removed, and
+Unicode normalization will be applied so that the Bangla script is standardized, since
+multiple encodings of the same Bangla characters may exist in transcribed or scanned
+medical text.
+3. Tokenization: The BanglaBERT tokenizer [6] will be used to tokenize each cleaned
+text sample, with a maximum length of 128 tokens per sample, padded to a fixed length
+for shorter samples and truncated for longer ones, allowing each client to process fixed-
+length batches.
+4.
+Label Encoding: The medical entity labels (such as Disease, Medicine, Organ)
+are encoded into integer class IDs for use by the token classification head and the
+cross-entropy loss function.
+5.
+Non-IID Silo Partitioning: The encoded dataset will be split into five non-
+overlapping client partitions (Hospital A-E), with the class distribution varying across
+34
+
+--- Page 46 ---
+partitions to simulate hospital specialization rather than an evenly mixed distribution.
+6. Train/Test Split per Client: For each client silo, an 80/20 train/test split will
+be used, so that local training and local evaluation always occur on disjoint datasets,
+ensuring the final global evaluation in Phase 5 is not influenced by data the model has
+already encountered.
+4.5 Model Development / Algorithm Design
+The core model to be used in FedMed-BN is BanglaBERT (csebuetnlp/banglabert) [6],
+fine-tuned for Bangla medical named entity recognition (NER). The choice of BanglaBERT
+over general multilingual models (mBERT, XLM-R) is due to the fact that BanglaBERT
+is pre-trained on a large Bangla corpus, providing it with a solid pre-trained represen-
+tation of Bangla vocabulary and grammar before any fine-tuning on medical datasets
+occurs. The model architecture shown in Figure 4.3 reflects the current design, though
+it has yet to be implemented or trained.
+Figure 4.3: BanglaBERT Model Architecture with Classification Head (Proposed)
+The BanglaBERT base model follows the standard transformer encoder architecture [34],
+35
+
+--- Page 47 ---
+consisting of 12 layers of encoders, 768 hidden dimensions, and 12 attention heads, which
+are to be retained as-is when fine-tuned.
+The only addition to the architecture is a
+dropout layer (p = 0.1) followed by a new linear classification head consisting of layers
+that transform each token representation into entity label predictions covering entity
+types such as Disease, Medicine, Organ, Hormone, Pharmacological Class, and Common
+Medical Terms, culminating in a softmax layer that yields the predicted label. During
+the federated training phase, all 12 layers of BanglaBERT along with the newly added
+classification head will be fine-tuned for each client, with nothing frozen; the domain
+shift from general Bangla text to clinical text is expected to be large enough to warrant
+updating the entire network rather than just the classification head. Whether this is
+feasible given the available compute (Section ??) will be determined once implementation
+starts.
+The AdamW optimizer [16] is planned to be used for training, as it is the standard
+optimizer for fine-tuning transformer models, with a decoupled weight-decay term that
+provides more stable convergence for BERT-style architectures. This optimizer will be
+wrapped using the Opacus library [36], which automatically scales per-sample gradients
+and applies calibrated Gaussian noise [1] before every local update is uploaded to the
+server, thus providing differential privacy guarantees. The following key hyperparameters
+are suggested as a starting point:
+• Learning rate: 2e-5
+• Batch size: 16 samples per local training step
+• Local epochs per round: 3
+• Total federated rounds: 20
+• Gradient clipping norm (C): 1.0
+• Noise multiplier (σ): 1.1
+• Target privacy budget: ϵ ≤3.0, δ = 1 × 10−5
+These values are chosen as starting points for fine-tuning BERT under differential privacy,
+based on common ranges reported in the literature [1, 36] for such fine-tuning. They are
+not yet the outcome of any experiments conducted by the authors but will be the values
+36
+
+--- Page 48 ---
+varied in the Phase 5 privacy-utility analysis, once training has been implemented, to
+observe how classification accuracy is impacted by increasing or decreasing the privacy
+budget.
+4.6 System Implementation / Modules Description
+The implementation of FedMed-BN is planned as four separate, modular components,
+as shown in Figure 4.4. Each module has its own responsibility and can be modified or
+replaced without affecting the others, allowing the three team members to work simulta-
+neously on different sections of the pipeline once implementation commences. Below are
+the module boundaries as planned at the time of writing; none has yet been programmed.
+Figure 4.4: FedMed-BN System Modules and Their Planned Responsibilities
+Data Module: Will read in all raw data files and produce the five non-IID client silos
+after performing the cleaning and tokenization process described in Section 4.4. It will
+also produce the 80/20 train-test split for each client and provide a simple data-loader
+interface for retrieving train/test chunks.
+Model Module: Will implement the BanglaBERT-plus-classification-head architecture
+described in Section 4.5 [6], along with the local training loop (forward pass, loss cal-
+culation, backward propagation) and a local evaluation function that returns accuracy,
+F1-score, precision, and recall over a client’s test split.
+37
+
+--- Page 49 ---
+FL Module: Built on the Flower (flwr) framework [5], this module will include the
+client-side fit() and evaluate() functions for each simulated hospital, as well as the
+server-side strategy for coordinating the round schedule and aggregating client weight
+updates using FedAvg [17].
+DP Module: Will wrap each client’s optimizer using Opacus’s PrivacyEngine [36]
+before local training starts.
+It is intended to clip each sample individually based on
+the configured norm, inject Gaussian noise scaled by the noise multiplier [1], and keep
+a running tally of the privacy budget spent so far using Opacus’s built-in accountant,
+which can be used to halt or flag training as soon as the target epsilon is likely to be
+breached.
+4.7 Hardware and Software Requirements
+FedMed-BN was built and trained using a mix of a local development machine and
+free cloud GPU services, since fine tuning a twelve layer transformer model such as
+BanglaBERT is not practical on a typical laptop or desktop within a reasonable amount of
+time. The local machine was mainly used for writing code, preparing the dataset, and run-
+ning lightweight tests of the federated learning simulation, while the actual BanglaBERT
+training rounds were carried out on Google Colab or Kaggle, which provide free access to
+GPUs such as the T4 or P100. Below, a table of hardware and software recommendations
+is provided based on the tools actually used in this project.
+38
+
+--- Page 50 ---
+Table 4.3: Hardware Recommendation
+Category
+Minimum
+Recommended
+Notes
+CPU
+4
+core
+x86_64
+processor
+(Intel
+Core i5 or AMD
+Ryzen 5)
+8 core processor
+or higher (Intel
+Core i7 or AMD
+Ryzen 7)
+For dataset preprocessing, client
+partitioning,
+and
+running
+the
+Flower federated learning simula-
+tion locally.
+RAM
+8 GB
+16 GB or higher
+Required to load datasets, the
+BanglaBERT tokenizer, and mul-
+tiple simulated federated learning
+clients into memory.
+GPU
+Not required for
+local
+develop-
+ment
+NVIDIA T4 or
+NVIDIA
+P100
+GPU
+(Google
+Colab
+or
+Kag-
+gle)
+Cloud GPUs can be used for
+BanglaBERT fine tuning and dif-
+ferential privacy training because
+transformer models require high
+computational power.
+Storage
+20 GB free space
+100
+GB
+free
+space
+For storing datasets, pretrained
+models, checkpoints, logs, and ex-
+perimental results.
+Operating Sys-
+tem
+Windows 10 or
+Ubuntu Linux
+Ubuntu
+Linux
+(Recommended)
+The proposed framework can run
+on multiple operating systems,
+although Linux provides better
+compatibility with machine learn-
+ing libraries.
+Internet
+Con-
+nection
+Stable
+broad-
+band connection
+High
+speed
+broadband con-
+nection
+Required for downloading pre-
+trained models, accessing cloud
+GPU services, and synchronizing
+project files.
+39
+
+--- Page 51 ---
+Table 4.4: Software Requirements
+Tool / Library
+Purpose
+Reason for Selection
+Python 3.10
+Programming
+lan-
+guage
+To implement the complete FedMed BN
+framework. Python provides excellent sup-
+port for machine learning, natural language
+processing, and federated learning libraries.
+PyTorch 2.x
+Deep
+learning
+framework
+For loading, fine tuning, and training the
+BanglaBERT model.
+It also provides di-
+rect compatibility with Opacus for differen-
+tial privacy.
+HuggingFace
+Transformers
+Transformer model
+library
+To load the pretrained BanglaBERT model
+and tokenizer while simplifying text prepro-
+cessing and model implementation.
+BanglaBERT
+Pretrained
+lan-
+guage model
+For the backbone model because it is specif-
+ically pretrained for Bangla language under-
+standing and performs well on Bangla NLP
+tasks.
+Flower (flwr)
+Federated learning
+framework
+To simulate the federated learning server
+and multiple hospital clients while support-
+ing seamless integration with PyTorch.
+Opacus
+Differential privacy
+library
+To implement gradient clipping, Gaussian
+noise addition, and privacy budget account-
+ing during local client training.
+Scikit learn
+Evaluation library
+To calculate Accuracy, Precision, Recall, F1
+Score, and Confusion Matrix for evaluating
+the classification model.
+40
+
+--- Page 52 ---
+Tool / Library
+Purpose
+Reason for Selection
+Pandas
+Data processing
+For loading datasets, cleaning Bangla medi-
+cal text, handling labels, and partitioning the
+dataset into client datasets.
+NumPy
+Numerical compu-
+tation
+For numerical operations, array manipula-
+tion, and data preprocessing during model
+training.
+Matplotlib
+Visualization
+To generate training curves, accuracy graphs,
+loss plots, and privacy utility comparison fig-
+ures.
+Seaborn
+Statistical
+visual-
+ization
+For generating confusion matrices and pre-
+sentation quality graphs.
+Google Colab
+Cloud
+computing
+platform
+For
+training
+BanglaBERT
+using
+free
+NVIDIA
+T4
+and
+P100
+GPUs
+because
+transformer fine tuning is computationally
+expensive.
+Kaggle
+Note-
+books
+Cloud
+computing
+platform
+For an alternative cloud environment for
+model training and experimentation using
+free GPU resources.
+Visual
+Studio
+Code
+Code editor
+For writing Python programs, debugging,
+dataset preprocessing, and project develop-
+ment.
+Git
+Version control
+To track project changes and maintain ver-
+sion history throughout development.
+GitHub
+Code repository
+For source code management, collaboration
+among team members, and project backup.
+41
+
+--- Page 53 ---
+4.8 Summary
+In this chapter, the methodology and implementation plan of FedMed-BN, a five-phase
+process of partitioning the dataset, preprocessing the data, setting up the BanglaBERT
+model, federated training using DP-FedAvg and evaluation were explained. The tools,
+dataset sources, proposed pipeline of preprocessing the data, proposed model architec-
+ture, planned modules of the proposed system, and the hardware and software required
+for implementing the proposed system were also explained. As of this writing, the topic
+has been decided, the appropriate literature has been consulted, the three datasets listed
+in Section 4.3 have been found and gathered, but the preprocessing, modeling, setting
+up federated learning and evaluating have not been done yet. The major tools and ar-
+chitectural choices are thus documented and the reasoning behind the design plan is
+given so that implementation can proceed directly from this plan.
+Once fully imple-
+mented and evaluated, final NER F1-scores, precision and recall as well as an NER
+performance/privacy-utility curve based on varying epsilon values will be included in a
+future revision of this chapter and in Chapter 5.
+42
+
+--- Page 54 ---
+Chapter 5
+Results and Evaluation
+5.1 Experimental Setup
+Content will be added in future.
+5.2 Performance Metrics
+Content will be added in future.
+5.3 Result Analysis
+Content will be added in future.
+5.4 Comparison with Baseline / Existing Approaches
+Content will be added in future.
+5.5 Discussion on Findings
+Content will be added in future.
+5.6 Limitations
+Content will be added in future.
+43
+
+--- Page 55 ---
+Chapter 6
+Project Planning and Budget
+6.1 Project Timeline
+The project was executed over an eleven-month period, spanning from February 2026 to
+December 2026, divided into five major phases covering literature review, data collec-
+tion and processing, prototype development, testing & validation, and documentation &
+report writing. The timeline is shown in Table 6.1 .
+Activities
+Months
+February -
+March
+(2026)
+April
+- May
+(2026)
+May -
+June
+(2026)
+July -
+October
+(2026)
+November - December
+(2026)
+Literature Review
+Data Collection
+and Processing
+Prototype
+Development
+Testing &
+Validation
+Documentation &
+Report Writing
+Table 6.1: Overview of Time Estimation
+44
+
+--- Page 56 ---
+6.2 Budget Estimation
+Item
+Basis
+Actual Cost
+Indicative
+Market Cost
+GPU compute for
+fine-tuning
+Approx. 120 GPU-hours
+across three models
+Existing
+hardware
+BDT 30,000 to
+45,000 (cloud
+equivalent)
+GPU compute for
+inference and
+evaluation
+Approx. 20 GPU-hours
+Existing
+hardware
+BDT 5,000 to
+8,000
+Frontier model
+API calls
+Free tier with key rotation
+BDT 0
+BDT 3,000 to
+5,000
+Software and
+libraries
+All open-source
+BDT 0
+BDT 0
+Electricity
+Training and development
+period
+BDT 4,000 to
+6,000
+BDT 4,000 to
+6,000
+Legal expert
+validation
+Benchmark question review
+Voluntary or
+in-kind
+BDT 20,000 to
+40,000
+Researcher time
+Approx. 18 weeks
+part-time
+Academic
+(unpaid)
+Stipend
+dependent
+Table 6.2: Overview of Cost Estimation
+6.3 Summary
+This section explains how having a clear project timeline helped keep the work organized
+and made sure each stage was completed on time. The budgeting process helped manage
+resources well, making sure the project stayed within its financial limits. Together, these
+helped the project run smoothly and efficiently from start to finish.
+45
+
+--- Page 57 ---
+Chapter 7
+Standards and Design Constraints
+This chapter documents how the PID-based line following robot project satisfies engi-
+neering standards and the accreditation requirements related to Complex Engineering
+Problems (CEP) and Complex Engineering Activities (CEA), and summarises compli-
+ance with relevant professional and safety practices.
+7.1 Compliance with Standards and Professional Practice
+Content will be added in future.
+7.1.1 Software Standard
+Content will be added in future.
+7.1.2 Hardware Standard
+Content will be added in future.
+7.1.3 Others
+Content will be added in future.
+7.2 Design Constraints
+Content will be added in future.
+7.2.1 Ethical and Professional Responsibilities
+Content will be added in future.
+46
+
+--- Page 58 ---
+7.2.2 Environmental and Sustainability Considerations
+Content will be added in future.
+7.2.3 Health and Safety Considerations
+Content will be added in future.
+7.3 Complex Engineering Problem (CEP) Coverage
+This project addresses a Complex Engineering Problem as defined by the BAETE/Wash-
+ington Accord attributes.
+The problem requires depth of knowledge across multiple
+knowledge profiles (P1), resolves conflicting requirements (P2), admits no obvious so-
+lution (P3), involves issues outside the typical CSE curriculum (P4), and is composed of
+many interdependent sub-systems (P7). Table 7.1 maps the Knowledge Profiles required
+for these problem attributes, and Table 7.2 maps the problem attributes themselves.
+Both tables follow the official CLO–PLO–K/P/A correspondence defined in the CSE
+400-A Course Outline.
+Table 7.1: Mapping of Knowledge Profiles (Ks) addressed through this research
+Ks
+Attribute How
+Ks
+is
+ad-
+dressed
+through
+this research
+Evidence
+(Sec-
+tion Reference)
+CLOs
+PLOs
+K3
+Engineer
+-ing
+Funda-
+mentals
+Programming
+(Python), data struc-
+tures and algorithms,
+distributed
+systems
+fundamentals,
+client-
+server communication
+protocols,
+and
+GPU
+compute basics.
+Chapter 4, Sec. 4.2
+(Tools,
+Libraries,
+and
+Technologies
+Used);
+Sec.
+4.6
+(System Implemen-
+tation).
+CLO2
+PLO(b),
+PLO(c),
+PLO(d),
+PLO(e)
+K4
+Specialist
+Knowl-
+edge
+Machine
+learning
+and
+deep
+learning,
+transformer-based
+NLP
+(BanglaBERT),
+federated
+learning
+algorithms
+(FedAvg,
+FedProx),
+differential
+privacy
+mechanisms,
+and
+low-resource
+Bangla language pro-
+cessing.
+Chapter 2, Sec. 2.1
+(Preliminar-
+ies);
+Chapter
+3,
+Sec.
+3.2.1,
+3.2.3
+(Architecture,
+De-
+sign Alternatives).
+CLO1,
+CLO2
+PLO(b),
+PLO(c),
+PLO(d),
+PLO(e),
+PLO(l)
+47
+
+--- Page 59 ---
+K5
+Engineer
+-ing
+De-
+sign
+Design of the feder-
+ated learning system
+architecture,
+the
+client-server
+com-
+munication
+protocol,
+the
+privacy-budget
+allocation scheme, and
+the model aggregation
+strategy
+for
+non-IID
+Bangla
+medical
+text
+data.
+Chapter
+3,
+Sec.
+3.2.1
+(High-
+Level
+Architec-
+ture);
+Sec.
+3.2.2
+(Detailed
+Design
+Diagrams).
+CLO2,
+CLO8
+PLO(b),
+PLO(c),
+PLO(d),
+PLO(e),
+PLO(j)
+K6
+Engineer
+-ing Prac-
+tice
+Implementation
+with
+PyTorch,
+the Flower
+federated
+learning
+framework,
+Hugging
+Face Transformers, the
+Opacus
+differential-
+privacy
+library,
+and
+secure
+client-server
+communication.
+Chapter 4, Sec. 4.5
+(Model
+Develop-
+ment);
+Sec.
+4.6
+(System Implemen-
+tation).
+CLO8
+PLO(c),
+PLO(d),
+PLO(e),
+PLO(j)
+K7
+Comprehe
+-nsion
+of
+Soci-
+etal
+and
+Environ-
+mental
+Impact
+Understanding of the
+health,
+safety,
+legal,
+and environmental im-
+plications
+of
+deploy-
+ing
+federated
+learn-
+ing on sensitive Bangla
+medical text, including
+data-breach
+risk
+re-
+duction and the energy
+footprint of repeated
+training rounds.
+Chapter
+1,
+Sec. 1.7.1–1.7.3 (So-
+cietal,
+Health/Le-
+gal, Environmental
+Impacts).
+CLO4,
+CLO5
+PLO(f),
+PLO(g),
+PLO(h)
+K8
+Research
+Literature
+Survey
+of
+federated
+learning,
+differen-
+tial
+privacy,
+secure
+aggregation,
+and
+low-resource
+Bangla
+NLP
+literature,
+and
+identification
+of
+the
+research gap.
+Chapter 2, Sec. 2.2
+(Related
+Works);
+Sec. 2.3 (Compar-
+ative
+Analysis);
+Sec. 2.4 (Research
+Gap).
+CLO1
+PLO(l)
+7.4 Complex Engineering Activities (CEA) Coverage
+Table 7.3 maps this project’s activities to the Complex Engineering Activities (A) at-
+tributes, following the official CLO-PLO-K/P/A correspondence defined in the CSE 400-
+A Course Outline.
+48
+
+--- Page 60 ---
+Table 7.2: Mapping with Complex Engineering Problems (Ps)
+Ps
+Attribute How
+Ps
+is
+ad-
+dressed
+through
+this research
+Evidence
+(Sec-
+tion Reference)
+CLOs
+PLOs
+P1
+Depth
+of
+Knowl-
+edge
+Required
+Requires
+research-
+literature study (K8),
+federated learning and
+differential
+privacy
+fundamentals
+(K3,
+K4), federated system
+design
+(K5),
+and
+implementation/inte-
+gration (K6).
+Chapter 2, Sec. 2.1–
+2.4;
+Chapter
+3,
+Sec.
+3.2.1–3.2.3;
+Chapter 4, Sec. 4.2,
+4.5, 4.6.
+See Ap-
+pendix E for full
+Knowledge
+Profile
+mapping.
+CLO1,
+CLO2
+PLO(b),
+PLO(c),
+PLO(d),
+PLO(e),
+PLO(l)
+P2
+Range
+of
+Con-
+flicting
+Require-
+ments
+Competing
+demands
+of
+stronger
+privacy
+(larger noise / smaller
+ϵ) versus model util-
+ity,
+communication
+efficiency versus con-
+vergence
+speed,
+and
+on-device
+computa-
+tional
+cost
+versus
+model complexity.
+Chapter 1, Sec. 1.2
+(Problem
+State-
+ment);
+Chapter
+3, Sec. 3.2.3 (De-
+sign
+Alternatives);
+Chapter 8, Sec. 8.3
+(Limitations).
+CLO2
+PLO(b),
+PLO(c),
+PLO(d),
+PLO(e)
+P3
+Depth
+of
+Analysis
+Required
+No obvious solution for
+how much differential-
+privacy noise to inject
+or how to structure
+aggregation;
+requires
+analysis of alternatives
+(central DP versus lo-
+cal DP), aggregation-
+strategy selection, and
+handling
+of
+non-IID
+client data.
+Chapter 2, Sec. 2.2–
+2.4;
+Chapter
+3,
+Sec.
+3.2.3
+(De-
+sign
+Alternatives);
+Sec. 3.3 (Algorith-
+mic Flow).
+CLO2
+PLO(b),
+PLO(c),
+PLO(d),
+PLO(e)
+P4
+Familiarity
+of Issues
+The
+medical-domain
+privacy/regulatory
+considerations
+and
+low-resource
+Bangla
+NLP
+challenges
+lie
+outside
+the
+issues
+typically
+encountered
+by
+standard
+CSE
+graduates.
+Chapter 1, Sec. 1.1
+(Background);
+Sec. 1.7.2 (Health,
+Safety,
+Legal
+Im-
+pact);
+Chapter 2,
+Sec.
+2.2
+(Bangla
+Medical NLP).
+CLO1
+PLO(c),
+PLO(d),
+PLO(e),
+PLO(l)
+49
+
+--- Page 61 ---
+P7
+Interdepen
+-dence
+The
+system
+comprises
+multiple
+interdepen-
+dent sub-systems:
+data
+preprocessing,
+local
+client training, the pri-
+vacy mechanism, global
+model aggregation, and
+the
+evaluation
+frame-
+work.
+Chapter 3, Sec. 3.2.1–
+3.2.2;
+Chapter
+4,
+Sec. 4.3–4.6.
+CLO3
+PLO(c),
+PLO(d),
+PLO(e),
+PLO(k)
+Table 7.3: Mapping of Complex Engineering Activities (As) to project implementation
+As Attribute How As is addressed
+through this research
+Evidence (Section
+Reference)
+CLOs
+PLOs
+A1
+Range
+of
+Resources
+Engages
+diverse
+re-
+sources: Bangla medical
+text corpora distributed
+across simulated clients,
+GPU compute, federated
+learning and NLP frame-
+works/APIs, differential-
+privacy
+tooling,
+and
+domain knowledge from
+healthcare
+data-privacy
+regulations.
+Chapter 2, Sec. 2.2–
+2.3;
+Chapter
+3,
+Sec. 3.1; Chapter 4,
+Sec. 4.2, 4.7; Chapter
+6, Sec. 6.1–6.2.
+CLO1,
+CLO2,
+CLO3
+PLO(b),
+PLO(c),
+PLO(d),
+PLO(e),
+PLO(k),
+PLO(l)
+A2
+Level of In-
+teraction
+Resolution of significant
+problems
+arising
+from
+the interaction between
+the privacy sub-system
+and the language-model
+sub-system, particularly
+the privacy-versus-utility
+trade-off at the aggrega-
+tion boundary.
+Chapter 3, Sec. 3.2.2–
+3.2.3;
+Chapter
+4,
+Sec. 4.5–4.6.
+CLO2
+PLO(b),
+PLO(c),
+PLO(d),
+PLO(e)
+A3
+Innovation
+Creative
+combination
+of
+transformer-based
+Bangla NLP with feder-
+ated
+learning,
+layering
+differential
+privacy
+on
+top of standard FedAvg
+to
+enable
+privacy-
+preserving collaborative
+training
+on
+sensitive
+medical text.
+Chapter 3, Sec. 3.2.3
+(Design
+Alterna-
+tives);
+Chapter
+1,
+Sec.
+1.6
+(Expected
+Outcomes).
+CLO1
+PLO(c),
+PLO(d),
+PLO(e)
+A4
+Conseque
+-nces
+for
+Society
+and
+the
+Environ-
+ment
+Enables
+privacy-
+preserving collaborative
+healthcare NLP without
+centralizing
+patient
+data,
+reducing
+data-
+breach risk; also raises
+fairness
+considerations
+and the energy footprint
+of
+repeated
+federated
+training rounds.
+Chapter 1, Sec. 1.7.1–
+1.7.3
+(Societal,
+Health/Legal,
+Envi-
+ronmental Impacts).
+CLO1,
+CLO4,
+CLO5
+PLO(f),
+PLO(g),
+PLO(h),
+PLO(l)
+50
+
+--- Page 62 ---
+A5
+Familiarity Extends
+beyond
+standard
+course-
+work
+by
+applying
+a
+privacy-preserving,
+principles-based feder-
+ated learning approach
+to a new domain (low-
+resource
+Bangla
+medical
+NLP
+with
+formal
+differential-
+privacy guarantees).
+Chapter 1, Sec. 1.6
+(Expected
+Out-
+comes); Chapter 2,
+Sec. 2.4 (Research
+Gap).
+CLO1,
+CLO2
+PLO(b),
+PLO(c),
+PLO(l)
+7.5 Summary
+This chapter has mapped the project’s design and development activities to the relevant
+Complex Engineering Problem attributes (P1, P2, P3, P4, P7) and Complex Engineering
+Activity attributes (A1 - A5), with evidence drawn from the system design, algorithm, im-
+plementation, and team-responsibility sections of this report, and cross-checked against
+the official CLO–PLO–K/P/A mapping in the CSE 400-A Course Outline. Together,
+these demonstrate that the project required integrating federated learning, differential
+privacy, and Bangla natural language processing knowledge, resolving a genuine privacy-
+versus-utility design trade-off, and coordinating a multi-member team across data pre-
+processing, model development, and evaluation workstreams.
+51
+
+--- Page 63 ---
+Chapter 8
+Conclusion and Future Work
+8.1 Summary of the Work
+The research presented in this paper proposes a new approach called FedMed-BN, an
+example of a privacy-preserving federated learning framework for Bangla medical named
+entity recognition (NER). At this pre-defense stage, all the work included a comprehensive
+review of existing literature on federated learning for medical NLP (Natural Language
+Processing), identifying a significant research gap in privacy preserving NLP for the
+Bangla language, selecting and validating relevant real world Bangla medical datasets
+and designing a full system architecture that incorporates both the BanglaBERT word
+embedding model and the DP-FedAvg machine learning algorithm. Ultimately, the goal
+of FedMed-BN is to allow a number of hospital client sites to collaborate to train a shared
+medical text classifier by enabling them to do so without ever having to share their raw
+patient data.
+8.2 Key Findings and Contributions
+A number of key findings were established during the literature review and system design
+phases. First, a critical gap was identified that there are currently no studies that combine
+federated learning with differential privacy for Bangla medical text. Second, from the
+review of 15 papers on federated learning for medical NLP in languages other than English
+or Chinese, it was clear that none of those studies were done in Bangla. As a result of these
+findings, FedMed-BN was developed as a unique framework that combined BanglaBERT,
+the FedAvg aggregation algorithm and the Gaussian Mechanism as a means of providing
+differential privacy. The development of FedMed-BN resulted in the completion of a fully
+52
+
+--- Page 64 ---
+designed system that consisted of both functional and non-functional requirements, high
+level and detail architecture drawings, as well as a preprocessing pipeline that had been
+tailored specifically to meet the needs of Bangla medical text.
+8.3 Limitations of the Study
+Since this represents the pre-defense stage of this project, the implementation and exper-
+imental validation aspects have not been accomplished at this time. Currently, the major
+limitation associated with FedMed-BN is that the actual results of training a model with
+FedMed-BN have not been obtained since the programming and training aspect of the
+project have not occurred yet. Moreover, although the primary dataset used to develop
+FedMed-BN was a collection of actual Bangla medical documents; due to its relatively
+small size, future generalizability of results from experiments using this dataset could
+potentially be compromised. Finally, both of these limitations will be addressed in the
+final document submitted for CSE 400 (4-2).
+8.4 Recommendations and Future Work
+Next actions on this project are to implement the DP-FedAvg training pipeline with Py-
+Torch, HuggingFace Transformers, Flower and Opacus and then to run experiments over
+the five simulated hospital clients and to evaluate the final global model by means of ac-
+curacy, F1-score, precision and recall. Future work in the long term will be to incorporate
+more heterogeneous Bangla medical text sources into our dataset to improve the general-
+izability of the system to other hospitals, extend support to additional entity types and
+expand coverage using Bangla BioMed, evaluate more sophisticated privacy techniques
+such as Secure Aggregation and work on personalized federated learning methods so as
+to improve system performance on non-IID data distributed across hospital clients.
+53
+
+--- Page 65 ---
+References
+[1] Martin Abadi, Andy Chu, Ian Goodfellow, H. Brendan McMahan, Ilya Mironov,
+Kunal Talwar, and Li Zhang. Deep learning with differential privacy. In Proceedings
+of the 2016 ACM SIGSAC Conference on Computer and Communications Security
+(CCS), pages 308–318. ACM, 2016.
+[2] Tanvir Ahmed and M. M. Rahman. Medical prescription using nlp approaches: A
+literature review. Journal of Advanced Transportation and Infrastructure (JATI),
+5(2):112–125, 2024.
+[3] Mohammed Al-Asadi and Shakir Tasdemir. A complete process of text classification
+system using state-of-the-art nlp models. Scientific Programming, 2022:1–18, 2022.
+[4] Fatima Al-Mansoori and Ahmed Al-Ali. Federated learning with privacy-preserving
+big data analytics for distributed healthcare systems. Journal of Computer Science
+and Technology Studies, 7(1):45–56, 2025.
+[5] Daniel J. Beutel, Taner Topal, Akhil Mathur, Xinchi Qiu, Javier Fernandez-Marques,
+Yan Gao, Lorenzo Sani, Kwing Hei Li, Titouan Parcollet, Pedro Porto Buarque
+de Gusmão, and Nicholas D. Lane. Flower: A friendly federated learning research
+framework. arXiv preprint arXiv:2007.14390, 2020.
+[6] Abhik Bhattacharjee, Tahmid Hasan, Wasi Ahmad, Kazi Samin Mubasshir, Md Sai-
+ful Islam, Anindya Iqbal, M. Sohel Rahman, and Rifat Shahriyar. Banglabert: Lan-
+guage model pretraining and benchmarks for low-resource language understanding
+evaluation in bangla. In Findings of the Association for Computational Linguistics:
+NAACL 2022, pages 1318–1327, Seattle, United States, 2022. Association for Com-
+putational Linguistics.
+[7] Kai Chang, Hailong Sun, Jindou Wan, and Xuezhong Zhou. General framework
+54
+
+--- Page 66 ---
+for entity extraction of heterogeneous clinical medical records based on federated
+contrast enhancement. Tsinghua Science and Technology, 30(2):115–126, 2025.
+[8] Ankita Dhar, Niladri Sekhar Dash, and Kaushik Roy. Categorization of bangla med-
+ical text documents based on hybrid internal feature. In Computational Intelligence
+in Pattern Recognition. Advances in Intelligent Systems and Computing, volume
+999, pages 181–192. Springer, 2019.
+[9] Dmitriy Dligach and Timothy Miller. Two-stage federated phenotyping and patient
+representation learning. In Proceedings of the 18th BioNLP Workshop, pages 101–
+108. Association for Computational Linguistics, 2019.
+[10] Jian Gao, Chen Liang, and Fei Wang. Fedclimask: Context-aware federated learn-
+ing with ontology-guided semantic masking for clinical nlp. In Proceedings of the
+GlobalNLP Workshop at ACL, pages 34–45. Association for Computational Linguis-
+tics, 2025.
+[11] Francesco Giglio, Eleonora Rossi, and Nicola Fazio. Natural language processing
+techniques for text classification of biomedical documents: A systematic review.
+Information, 13(10):478, 2022.
+[12] Guang Hu and Xin Fang. Flcmc: Federated learning approach for chinese medicinal
+text classification. Entropy, 26(10):871, 2024.
+[13] Nazrul Islam, Asif Rahman, and Sajjad Hossain. Deep learning approach for hi-
+erarchical disease classification from bengali text symptoms.
+In Proceedings of
+the International Conference on Advances in Electrical and Computer Engineering
+(IEEE), pages 214–221, 2025.
+[14] Santosh Kumar and Alok Mishra. Medical prescription using nlp approaches: A
+literature review.
+International Journal of Healthcare Information Systems and
+Informatics, 19(2):1–22, 2024.
+[15] Xun Li, Jian Wu, and Yu Zhou. Federated learning-based nlp: A systematic litera-
+ture review. Artificial Intelligence Review, 57(4):112, 2024.
+[16] Ilya Loshchilov and Frank Hutter.
+Decoupled weight decay regularization.
+In
+International Conference on Learning Representations (ICLR), 2019.
+55
+
+--- Page 67 ---
+[17] H. Brendan McMahan, Eider Moore, Daniel Ramage, Seth Hampson, and Blaise
+Agüera y Arcas. Communication-efficient learning of deep networks from decen-
+tralized data.
+In Proceedings of the 20th International Conference on Artificial
+Intelligence and Statistics (AISTATS), pages 1273–1282, 2017.
+[18] Abdul Rasool Md, Farheen Mohammed, and Zunaira Begum. Improving text clas-
+sification in federated learning through transfer learning: A combined approach
+for enhanced convergence and personalization. Journal of Theoretical and Applied
+Information Technology, 102(23):5831–5842, 2024.
+[19] Milena Milićević, Goran imić, and Dušan Pavlović. Medical prescription classifi-
+cation: An nlp-based approach.
+In Proceedings of the Federated Conference on
+Computer Science and Information Systems (FedCSIS), volume 18, pages 257–261,
+2019.
+[20] Tsendsuren Munkhdalai, Feifan Liu, and Hong Yu. A comparative study on deep
+learning models for text classification of unstructured medical notes with various
+levels of class imbalance. BMC Medical Research Methodology, 22(1):142, 2022.
+[21] Nilesh Patel and Deep Shah. Federated learning for privacy-preserving severity clas-
+sification in healthcare: A secure edge-aggregated approach. In Proceedings of the
+IEEE International Conference on Bioinformatics and Biomedicine, pages 1412–1419,
+2025.
+[22] Le Peng, Gaoxiang Luo, Sicheng Zhou, Jiandong Chen, Ziyue Xu, Ju Sun, and Rui
+Zhang. An in-depth evaluation of federated learning on biomedical natural language
+processing for information extraction. npj Digital Medicine, 7(1):127, 2024.
+[23] Le Peng, Gaoxiang Luo, Sicheng Zhou, Jiandong Chen, and Rui Zhang. An in-depth
+evaluation of federated learning on biomedical nlp for information extraction. npj
+Digital Medicine, 7(1):127, 2024.
+[24] K. Srinivasa Rao and P. S. N. Murthy. Intelligent community health literacy en-
+hancement using federated natural language processing and privacy-preserving deep
+learning. Polaris: A Collaborative Journal, 3(1):74–85, 2025.
+56
+
+--- Page 68 ---
+[25] Sudipta Roy and Amitava Das. Unstructured medical text classification using lin-
+guistic analysis: A supervised deep learning approach. ResearchGate Preprint, pages
+1–12, 2019.
+[26] Abdullah Mohammad Sakib, Bilkis Jamal Ferdosi, Shahruz Jahan, and Kazi Jashim.
+Medical text extraction and classification from prescription images. In Proceedings
+of the 25th International Conference on Computer and Information Technology
+(ICCIT), pages 1–6. IEEE, 2022.
+[27] Salim Sazzed.
+Banglabiomed: A biomedical named-entity annotated corpus for
+bangla (bengali). In Proceedings of the 21st Workshop on Biomedical Language
+Processing, pages 323–329. Association for Computational Linguistics, 2022.
+[28] Rubel Sheikh, Shifat Ara Rafiq, Md. Mehedi Hasan, Shakil Ahmed, and Farzana
+Akter. Bangla-meder: An annotated bangla dataset for multi-type medical entity
+recognition from medical text. Data in Brief, 66:112705, 2026.
+[29] Richa Srivastava and Shailendra Shukla. A comprehensive review on the techniques
+used for recognising handwritten medical prescriptions. SSRN Electronic Journal,
+pages 1–15, 2023.
+[30] Dianbo Sui, Yubo Chen, Kang Liu, and Jun Zhao. Feded: Federated learning via
+ensemble distillation for medical relation extraction.
+In Proceedings of the 2020
+Conference on Empirical Methods in Natural Language Processing (EMNLP), pages
+2118–2128. Association for Computational Linguistics, 2020.
+[31] Hongwei Sui, Xiaokang Wang, Junda Liu, and Yu Wang.
+Training a deep con-
+textualized language model for icd-10 classification via federated learning: Model
+development and validation study. JMIR Medical Informatics, 11:e43210, 2023.
+[32] Tanjim Tahar Taurpa. Bangla medical entity dataset (multi-bert). Kaggle Dataset,
+2026. Available at: https://www.kaggle.com/datasets/tanjimtaharataurpa/bangla-
+medical-entity-dataset.
+[33] Johan van Soest, Michel Dumontier, and Andre Dekker.
+Advancing privacy-
+preserving health care analytics and implementation of the personal health train:
+Federated deep learning study. JMIR AI, 4:e59123, 2025.
+57
+
+--- Page 69 ---
+[34] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N.
+Gomez, Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. In Advances
+in Neural Information Processing Systems (NeurIPS), volume 30, 2017.
+[35] Rui Wang, Ricardo Henao, and Lawrence Carin. Personalized federated learning for
+text classification with gradient-free prompt tuning. In Findings of the Association
+for Computational Linguistics:
+NAACL 2024, pages 4597–4612. Association for
+Computational Linguistics, 2024.
+[36] Ashkan Yousefpour, Igor Shilov, Alexandre Sablayrolles, Davide Testuggine, Karthik
+Prasad, Mani Malek, John Nguyen, Sayan Ghosh, Akash Bharadwaj, Jessica Zhao,
+Graham Cormode, and Ilya Mironov.
+Opacus: User-friendly differential privacy
+library in pytorch. arXiv preprint arXiv:2109.12298, 2021.
+[37] Jie Zhang, Yang Liu, Wei Liang, and Yanjun Guo.
+A communication-efficient
+federated text classification method based on parameter pruning.
+Mathematics,
+11(13):2894, 2022.
+[38] Yilong Zhao, Chao Chen, and Lin Wang.
+Privacy-preserving federated learning
+and its application to natural language processing.
+Knowledge-Based Systems,
+265:110354, 2023.
+58
+
+--- Page 70 ---
+Appendix A
+Source Code
+Will be written upon completion.
+59
+
+--- Page 71 ---
+Appendix B
+Team Responsibilities
+Table B.1: Team Member Responsibilities
+Team Member
+Roll
+Number
+Responsibilities
+Faiza Haque
+Shoily
+22201183
+Chapter 2: Background and Literature Review
+(Preliminaries, Related Works, Comparative
+Analysis, Research Gap, Summary) Chapter 3:
+System Overview and Architecture (High-Level
+Architecture, Detailed Design Diagrams,
+Design Alternatives and Rationale, Summary)
+Chapter 8: Conclusion and Future Work
+Tanjuma Noor
+22201210
+Chapter 1: Introduction (all sections) Chapter
+3: Section 3.1.1 - Questionnaires and
+Stakeholder Interviews Chapter 3: Section
+3.1.2 - Functional and Non-Functional
+Requirements Table Chapter 6: Project
+Planning and Budget Chapter 7: Standards
+and Design Constraints (CEP and CEA
+Coverage, Evidence of CEP, Evidence of CEA)
+60
+
+--- Page 72 ---
+Team Member
+Roll
+Number
+Responsibilities
+Muhib Al Ahad
+22201207
+Chapter 4: Methodology and Implementation
+(all sections - Methodological Framework,
+Tools and Technologies, Dataset Description,
+Preprocessing Steps, Model Development,
+System Modules, Hardware and Software
+Requirements)
+All Team
+Members (Faiza,
+Tanjuma, Muhib)
+-
+Literature review and paper selection - all 15
+papers were reviewed collaboratively Dataset
+collection and verification - all three datasets
+were identified and verified together System
+design decisions - key architectural choices
+including BanglaBERT, FedAvg, and
+DP-FedAvg were decided jointly through team
+discussions and supervisor guidance
+61
+
+--- Page 73 ---
+Appendix C
+Ethics and Compliance Statements
+This research followed standardized ethical guidelines in database construction,
+consultation with experts, and privacy protection in system design, from initial design
+to final implementation.
+Data Sourcing and Licensing
+The Bangla-MedER and BanglaBioMed are both publicly available academic corpora
+which are both released for research purposes. No proprietary or scraped data, and no
+real identifiable patient records were accessed throughout.
+No Human Subjects Research
+This project is not to be performed on real patients or real hospital data. The federated
+“hospital clients” are simulated partitions of the public datasets above, not real
+hospitals.
+Expert Consultation Ethics
+During the requirement analysis (Section 3.1) three practicing physicians were
+voluntarily consulted. They were all volunteers who knew the purpose of the
+consultation when it took place and who agreed to their information being included in
+this thesis. There was no compensation provided and no sensitive personal data was
+gathered beyond professional occupation and contact data, which is provided here with
+their consent.
+62
+
+--- Page 74 ---
+Data Privacy by Design
+The system is not based on any real patient data, but rather has been designed with
+privacy-preserving considerations in mind for later deployment on actual patients: raw
+text remains local to each client, and only differentially private model updates
+(DP-FedAvg) are sent to the central server, as detailed in Chapter 3.
+Compliance Boundaries
+This project involves de-identified public data and simulated institutional partitions,
+and therefore does not need formal IRB or medical ethics committee approval. If this
+were to be deployed in the future with real hospital data, it would also need to be
+approved ethically and formally by the hospital where the data is to be shared.
+63
+
+--- Page 75 ---
+Appendix D
+Expert Consultation Evidence
+This appendix presents the complete evidence of the expert consultation process
+conducted to validate the design, methodology, and claims of FedMed-BN. Three
+domain experts - Shayela Begum, Zakir Hossain, and Nasima Kamal, all practicing
+physicians/doctors - independently completed a structured evaluation questionnaire
+assessing the project across five dimensions: correct application of subject-specific
+concepts, logical consistency, validity and justification, innovation and contribution, and
+overall quality. The complete questionnaire responses submitted by each evaluator are
+provided below as screenshot evidence.
+64
+
+--- Page 76 ---
+Questionnaire Introduction and Evaluator
+Details
+Section 1: Correct Application of Subject-
+Specific Concepts
+Section 2: Logical Consistency
+Section 3: Validity and Justification
+Figure D.1: Expert Consultation Evidence – Shayela Begum (Part 1)
+65
+
+--- Page 77 ---
+Section 4: Innovation and Contribution
+Section 5: Overall Quality
+Figure D.2: Expert Consultation Evidence - Shayela Begum (Part 2)
+Questionnaire Introduction and Evaluator
+Details
+Section 1: Correct Application of Subject-
+Specific Concepts
+Figure D.3: Expert Consultation Evidence - Zakir Hossain (Part 1)
+66
+
+--- Page 78 ---
+Section 2: Logical Consistency
+Section 3: Validity and Justification
+Section 4: Innovation and Contribution
+Section 5: Overall Quality
+Figure D.4: Expert Consultation Evidence - Zakir Hossain (Part 2)
+67
+
+--- Page 79 ---
+Questionnaire Introduction and Evaluator
+Details
+Section 1: Correct Application of Subject-
+Specific Concepts
+Section 2: Logical Consistency
+Section 3: Validity and Justification
+Figure D.5: Expert Consultation Evidence - Nasima Kamal (Part 1)
+68
+
+--- Page 80 ---
+Section 4: Innovation and Contribution
+Section 5: Overall Quality
+Figure D.6: Expert Consultation Evidence - Nasima Kamal (Part 2)
+69
+
+--- Page 81 ---
+Appendix E
+Evidences of CEP
+Table E.1: Evidences of CEP
+Ps
+Attribute Evidence (Section/Appendix
+Reference)
+Knowledge Profile Mapping
+(for P1 only)
+P1
+Depth of
+Knowledge
+Required
+Chapter 2: Section 2.1 (Preliminaries:
+Federated Learning, Differential
+Privacy, Transformer Models, Non-IID
+Data), Section 2.2 (Related Works),
+Section 2.3 (Comparative Analysis of
+Related Works), Section 2.4 (Research
+Gap / Limitations of Existing
+Methods). Chapter 3: Section 3.2.1
+(High-Level Architecture), Section 3.2.2
+(Detailed Design Diagrams), Section
+3.2.3 (Design Alternatives and
+Rationale). Chapter 4: Section 4.2
+(Tools, Libraries, and Technologies
+Used), Section 4.5 (Model Development
+/ Algorithm Design), Section 4.6
+(System Implementation / Modules
+Description).
+K3 (Engineering Fundamentals):
+Chapter 4 - Section 4.2 (Tools,
+Libraries, and Technologies Used),
+Section 4.6 (System
+Implementation).
+K4 (Specialist Knowledge):
+Chapter 2 - Section 2.1
+(Preliminaries), Chapter 3 - Section
+3.2.1 (High-Level Architecture),
+Section 3.2.3 (Design Alternatives
+and Rationale).
+K5 (Engineering Design): Chapter
+3 - Section 3.2.1 (High-Level
+Architecture), Section 3.2.2
+(Detailed Design Diagrams).
+K6 (Engineering Practice):
+Chapter 4 - Section 4.5 (Model
+Development), Section 4.6 (System
+Implementation).
+K8 (Research Literature): Chapter
+2 - Section 2.2 (Related Works),
+Section 2.3 (Comparative
+Analysis), Section 2.4 (Research
+Gap).
+70
+
+--- Page 82 ---
+Appendix F
+Evidences of CEA
+Table F.1: Evidences of CEA
+As
+Attribute
+Evidence (Section/Appendix Reference)
+A1
+Range of
+Resources
+Chapter 2: Section 2.2, 2.3 (Research literature base on FL and
+privacy-preserving NLP). Chapter 3: Section 3.1 (Stakeholder
+interviews and questionnaires as human resources). Chapter 4:
+Section 4.2 (Tools, Libraries, and Technologies Used), Section 4.7
+(Hardware and Software Requirements). Chapter 6: Section 6.1
+(Project Timeline), Section 6.2 (Budget Estimation).
+A2
+Level of
+Interaction
+Chapter 3: Section 3.2.2 (Detailed Design Diagrams) - shows how
+the differential privacy mechanism at each client and FedAvg
+aggregation at the server interact to balance privacy and model
+utility; Section 3.2.3 (Design Alternatives and Rationale). Chapter
+4: Section 4.5 (Model Development), Section 4.6 (System
+Implementation).
+A3
+Innovation
+Chapter 3: Section 3.2.3 (Design Alternatives and Rationale) -
+creative combination of BanglaBERT with DP-FedAvg to enable
+privacy-preserving collaborative training on Bangla medical text.
+Chapter 1: Section 1.6 (Expected Outcomes).
+A4
+Consequences
+for Society
+and the
+Environment
+Chapter 1: Section 1.7.1 (Impact on Societal and Cultural Issues),
+Section 1.7.2 (Impact on Health, Safety, and Legal Issues), Section
+1.7.3 (Impact on Environment and Sustainability Issues).
+A5
+Familiarity
+Chapter 1: Section 1.6 (Expected Outcomes) - extends beyond
+standard coursework into privacy-preserving federated NLP for a
+low-resource language. Chapter 2: Section 2.4 (Research Gap /
+Limitations of Existing Methods).
+71
+

@@ -1,0 +1,826 @@
+--- Page 1 ---
+FedMed-BN: Privacy-Preserving
+Federated Learning for Bangla
+Medical Text
+University of Asia Pacific
+Department of Computer Science and Engineering
+Supervised by
+Shammi Akhtar
+Assistant Professor
+Dept. of CSE
+University of Asia Pacific
+Co-Supervised by
+Md Shafayatul Haque
+Lecturer
+Dept. of CSE
+University of Asia Pacific
+A privacy-preserving federated learning architecture for cross-institutional 
+Bangla clinical text mining
+
+--- Page 2 ---
+Muhib Al Ahad
+(22201207)
+Tanjuma Noor
+(22201210)
+Faiza Haque
+Shoily
+(22201183)
+MEET OUR TEAM
+
+--- Page 3 ---
+Supervisor &
+Assistant Professor
+Dept. of CSE
+University of Asia
+Pacific
+Shammi Akhtar
+Co Supervisor 
+& Lecturer
+Dept. of CSE
+University of Asia
+Pacific
+Md Shafayatul Haque
+MEET OUR SUPERVISORS
+
+--- Page 4 ---
+Introduction
+Motivation
+Literature review
+Research gap and key contribution
+Methodology
+Dataset Description
+Timeline
+Conclusion and Future work
+CEP Mapping
+Reference
+TABLE OF CONTENTS
+
+--- Page 5 ---
+Bangla Clinical Text is Exploding, but
+Underrepresented in Medical NLP.
+Patient Data Cannot Be Centralized Across
+Hospitals.
+Federated Learning as a Privacy-Preserving Way
+Forward.
+Bangla Medical Text
+Privacy Challenge
+FedMed-BN
+INTRODUCTION
+1
+
+--- Page 6 ---
+ Language Gap
+No medical AI system
+exists for Bangla
+clinical text.
+Data Privacy
+Data cannot be 
+centralized
+Security Risk
+Gradient leakage
+risk
+MOTIVATION
+2
+
+--- Page 7 ---
+Year
+Paper
+Dataset
+Model
+Performance
+Limitations
+2019
+Hasan et al. – Medical
+Prescription NLP via OCR
+[2]
+~800K prescription
+text rows
+OCR (EAST+Tesseract) +
+Rule-based NLP
+93–95% accuracy
+Manual rule creation;
+prescriptions only; not
+federated
+2019
+Dligach & Miller – Two-
+Stage Federated
+Phenotyping [3]
+MIMIC-III; i2b2
+Obesity Challenge
+DAN + Federated
+Phenotyping Classifier
+F1 = 0.724 (≈
+centralized)
+No differential privacy;
+weak on rare conditions
+2022
+Islam et al. –
+BanglaBioMed NER [5]
+BanglaBioMed (818
+sent., 11,196 tokens)
+BanglaBERT / mBERT /
+XLM-RoBERTa
+BanglaBERT F1 =
+81.33% (best)
+No federated learning; no
+privacy; small dataset
+2022
+Liu et al. – FedInitPrune
+[7]
+Fudan Chinese Text;
+THUCNews
+Federated TextCNN +
+Parameter Pruning
+74.26% comm.
+reduction, <2%
+accuracy drop
+No privacy mechanism;
+Chinese text only
+2023
+Huang et al. – Federated
+ICD-10 Classification [6]
+3 Taiwanese hospital
+EMR silos
+Federated
+PubMedBERT / BioBERT
+/ ClinicalBERT
+F1 = 0.812 (+3.11%)
+No DP; high local
+compute; non-IID
+challenges
+2023
+Lyu et al. – LDP for Edge
+NLP [10]
+IMDB Reviews;
+MovieLens
+LDP + Bitwise
+Quantization + Feature
+Hashing
+Competitive
+accuracy, low
+resource cost
+LDP noise reduces
+accuracy; not tested on
+medical text
+LITERATURE REVIEW
+3
+
+--- Page 8 ---
+Year
+Paper
+Dataset
+Model
+Performance
+Limitations
+2024
+Chen et al. – FLCMC [1]
+IMCS-V2 (4,116
+dialogues)
+FedPA / FedPAP
+FedPAP: 0.79
+accuracy
+No DP; Chinese only;
+large model impractical
+on edge
+2024
+Rui Wang, Ricardo Henao
+– Gradient-Free Prompt
+Tuning [4]
+SST-2, AG's News,
+TREC
+RoBERTa-large +
+Genetic Algorithm
+1000× lower comm.
+cost, competitive
+accuracy
+GA computationally
+heavy; prompt-template
+dependent
+2024
+Xun Li – FL-NLP
+Systematic Review [9]
+Gboard, Stack
+Overflow, IMDB, etc.
+Survey: FedAvg,
+FedProx, FedAdam,
+BERT
+92% spam; 76%
+sentiment
+classification
+Survey only; non-English
+NLP underexplored
+2024
+Ju Sun, and Rui Zhang –
+FL Biomedical NLP
+Evaluation [14]
+8 biomedical NER / RE
+corpora
+FedAvg / FedProx +
+BERT variants
+FedProx F1 = 0.994
+(non-IID)
+Simulated splits; no DP or
+homomorphic encryption
+2025
+Ahmed Al-Ali – FL for
+Healthcare Big Data [8]
+TB Chest X-ray (7,000
+images)
+ResNet + FedAvg +
+SMOTE
+96.7% accuracy, F1 =
+97.4%
+Imaging only; no DP; no
+NLP component
+2025
+Nilesh Patel and Deep
+Shah – Edge-Aggregated
+FL Healthcare [11]
+Synthetic data +
+MIMIC-III ICU
+Hierarchical FL +
+Shamir's Secret Sharing
+Strong privacy via
+SMPC
+Tabular only; no NLP;
+synchronous rounds
+LITERATURE REVIEW (Cont...)
+4
+
+--- Page 9 ---
+Year
+Paper
+Dataset
+Model
+Performance
+Limitations
+2025
+Johan van Soest, Michel
+Dumontier – Personal
+Health Train [12]
+12 hospitals, 8
+countries (CT scans)
+FedAvg + PHT /
+Vantage6
+Feasible across 12
+real hospitals
+Imaging only; network
+bottlenecks; no formal DP
+2025
+K. Srinivasa Rao and P. S.
+N. Murthy – FedHealth-
+NLP [13]
+4 community health
+text corpora
+FedBERT + DP +
+Knowledge Graph NN
+91.3% accuracy; 42%
+comm. reduction
+Simulated nodes; DP cuts
+accuracy by 0.8%; English
+only
+2025
+Jian Gao, Chen Liang, and
+Fei Wang – FedCliMask
+[15]
+12,996 synthetic
+clinical notes
+UMLS-guided Semantic
+Masking + ClinicalBERT
+Optimal privacy-
+utility balance
+identified
+Not implemented;
+synthetic & English only
+LITERATURE REVIEW (Cont...)
+5
+
+--- Page 10 ---
+OCR + rule-based NLP for prescriptions; first federated phenotyping (MIMIC-III)
+2019 
+BanglaBioMed NER baseline; communication-efficient FL (FedInitPrune)
+2022 
+Federated ICD-10 classification on real hospital silos; LDP for edge NLP
+2023 
+Chinese federated dialogue (FLCMC); FL-NLP surveys; FL beats few-shot LLMs on
+biomedical NLP
+2024 
+FL scales to imaging + text health data; DP-integrated FedHealth-NLP; ontology-aware
+masking (FedCliMask)
+2025
+EVALUATION OF RELATED WORK
+6
+
+--- Page 11 ---
+Research Gap
+No federated learning for Bangla
+medical text 
+Key Contribution
+First federated Bangla medical NLP
+RESEARCH GAP & KEY CONTRIBUTION
+Privacy preserving learning
+Realistic hospital simulation
+Reusable benchmark for future research
+Privacy protection is still limited 
+Bangla medical NLP uses centralized
+data
+No solution for low-resource Bangla
+healthcare
+7
+
+--- Page 12 ---
+Expert
+Occupation
+Key Feedback
+Shayela Begum
+Physician
+Recommended incorporating real-world prescription phrasing to improve clinical
+relevance.
+Zakir Hossain
+Surgeon
+Emphasized clearly documenting what data leaves the client vs. what stays local.
+Nasima Kamal
+Doctor
+Recommended prioritizing evaluation on realistic non-IID clinic data distributions.
+Requirement validation interviews were held with three clinical experts:
+Overall consensus: federated + privacy-preserving design is clinically relevant and directly useful for
+Bangladeshi hospitals.
+EXPERT FEEDBACK
+8
+
+--- Page 13 ---
+Dataset
+Source / Year
+Contents
+Role in FedMed-BN
+Bangla MedER
+PLOS One, Sept 2025
+6,895 real-world medical observations with
+disease / specialty labels
+Primary dataset, partitioned into 5 non-IID
+hospital clients
+BanglaBioMed
+ACL BioNLP, 2022
+818 sentences, 11,196 tokens; 4 biomedical entity
+types
+Supports biomedical NER and improves
+domain knowledge
+Bangla-MedER
+(Mendeley)
+Mendeley Data, Oct
+2025
+2,980 annotated statements, 14,357 tokens; 6
+entity types
+Provides additional annotated medical
+entities
+DATASET DESCRIPTION
+6,895
+medical records
+5
+hospital clients
+6
+medical entity types
+80/20
+train-test split per client
+9
+
+--- Page 14 ---
+DATASET SAMPLES
+BanglaBioMed
+Bangla MedER
+Annotated
+10
+
+--- Page 15 ---
+1
+2
+3
+4
+5
+METHODOLOGY
+Dataset
+Collection
+Collect Bangla
+medical datasets and
+divide them into 5
+hospital clients.
+Data
+Preprocessing
+Clean the data,
+tokenize the text,
+and prepare it for
+training.
+Model
+Setup
+Load BanglaBERT
+and prepare the
+model for NER
+training.
+FL + DP
+Training
+Train the local model,
+apply Differential
+Privacy, and combine
+updates.
+Evaluate &
+Analyze
+Measure Accuracy,
+F1, Precision, Recall
+and the privacy
+budget.
+11
+
+--- Page 16 ---
+07
+METHODOLOGY FRAMEWORK
+12
+
+--- Page 17 ---
+TIMELINE
+Process
+Jan
+Feb
+Mar
+Apr
+May
+Jun
+Jul
+Aug
+Sep
+Oct
+Nov
+Dec
+Topic Selection
+Literature Review
+Dataset Collection
+& Preprocessing
+Development
+Model Training
+Documentation &
+Report Writing
+13
+
+--- Page 18 ---
+Introduced FedMed-BN for Bangla Medical NER.
+Found a key gap in Bangla Medical NLP privacy.
+Designed architecture combining BanglaBERT
+with DP-FedAvg.
+Enabled privacy-preserving Bangla healthcare
+NLP.
+CONCLUSION
+14
+
+--- Page 19 ---
+Implement DP-FedAvg pipeline.
+Run experiments across 5 simulated hospital clients.
+Evaluate accuracy, F1, precision, recall.
+Expand dataset with diverse Bangla medical sources
+Explore secure aggregation and personalized FL.
+FUTURE WORK
+15
+
+--- Page 20 ---
+Ks
+Attribute
+How Ks is Addressed Through This Research
+Evidence
+CLOs
+PLOs
+K3
+Engineering
+Fundamentals
+Applies Python programming, distributed computing
+principles, and client–server communication as the
+engineering foundation of the federated learning
+framework.
+Ch.3 – System
+Architecture; Ch.4.2 –
+Tools, Libraries &
+Technologies
+CLO2
+PLO(b)
+Applies machine learning fundamentals, including
+transformer-based NLP and BanglaBERT, for Bangla
+medical text processing.
+Ch.2.1 – Preliminaries;
+Ch.3 – Methodology
+Framework
+CLO2
+PLO(c)
+K4
+Specialist
+Knowledge
+Applies Federated Learning, Differential Privacy,
+BanglaBERT, and Medical Named Entity Recognition to
+design a privacy-preserving Bangla medical NLP
+framework.
+Ch.2.1 – Preliminaries;
+Ch.3.2.1 – High-Level
+Architecture; Ch.3.2.3
+– Design Alternatives
+CLO2
+PLO(b)
+How Knowledge Profiles (Ks) are addressed through FedMed-BN, and mapping among Ks, CLOs, and PLOs
+CEP MAPPING
+16
+
+--- Page 21 ---
+Ks
+Attribute
+How Ks is Addressed Through This Research
+Evidence
+CLOs
+PLOs
+K5
+Engineering
+Design
+Designs the FedMed-BN architecture by integrating local
+client training, Differential Privacy, and FedAvg
+aggregation.
+Ch.3.2.1 – High-
+Level Architecture
+CLO2
+PLO(b)
+Designs secure communication between hospital clients
+and the global server while considering Non-IID data
+distribution and parameter aggregation.
+Ch.3.2.2 – Detailed
+Design Diagrams
+CLO2
+PLO(c)
+K6
+Engineering
+Practice
+Plans implementation using PyTorch, Flower Framework,
+Hugging Face Transformers, and Opacus following modern
+engineering practices.
+Ch.4.2 – Tools &
+Technologies;
+Ch.4.5 – Model
+Development
+CLO2
+PLO(c)
+How Knowledge Profiles (Ks) are addressed through FedMed-BN, and mapping among Ks, CLOs, and PLOs
+CEP MAPPING (Cont...)
+17
+
+--- Page 22 ---
+Ps
+Attribute
+How Ps is Addressed Through This Research
+Evidence
+CLOs
+PLOs
+P1
+Depth of
+Knowledge
+Required
+Integrates knowledge of Federated Learning, Differential
+Privacy, BanglaBERT, and Bangla medical NLP to formulate a
+privacy-preserving distributed learning framework.
+Ch.2.1–2.4 –
+Background,
+Related Works &
+Research Gap
+CLO1
+PLO(l)
+Applies engineering fundamentals to design the complete
+federated learning pipeline for Bangla medical text analysis.
+Ch.3.2.1–3.2.3 –
+Architecture &
+Design Alternatives
+CLO2
+PLO(c)
+How Complex Engineering Problem attributes (Ps) are addressed through FedMed-BN, and mapping among Ps, CLOs, and PLOs
+CEP MAPPING (Cont...)
+18
+
+--- Page 23 ---
+Ps
+Attribute
+How Ps is Addressed Through This Research
+Evidence
+CLOs
+PLOs
+P3
+Depth of
+Analysis
+Required
+Analyses different Federated Learning architectures,
+Differential Privacy mechanisms, and Bangla language models
+before selecting the proposed approach.
+Ch.2.2–2.4 –
+Literature Review,
+Comparative
+Analysis &
+Research Gap
+CLO2
+PLO(b)
+Evaluates the privacy–utility trade-off and the impact of Non-
+IID client distributions while designing the proposed
+framework.
+Ch.3.2.3 – Design
+Alternatives; Ch.3.3
+– Algorithmic Flow
+CLO2
+PLO(c)
+P6
+Extent of
+Stakeholder
+Involvement
+Identifies stakeholder requirements from healthcare
+organizations and considers privacy, usability, and regulatory
+needs during system requirement analysis.
+Ch.3.1 –
+Requirement
+Analysis &
+Stakeholder
+Questionnaire
+CLO2
+PLO(b)
+How Complex Engineering Problem attributes (Ps) are addressed through FedMed-BN, and mapping among Ps, CLOs, and PLOs
+CEP MAPPING (Cont...)
+19
+
+--- Page 24 ---
+As
+Attribute
+How As is Addressed Through This Research
+Evidence
+CLOs
+PLOs
+A1
+Range of
+Resources
+Uses Bangla medical datasets, research publications, GPU
+computing, Federated Learning frameworks, NLP libraries,
+and healthcare domain knowledge to develop the proposed
+system.
+Ch.2.2–2.3 –
+Literature Review;
+Ch.4.2 – Tools &
+Technologies
+CLO1
+PLO(l)
+Selects software tools, hardware resources, and project
+planning techniques to support implementation of the
+proposed system.
+Ch.4.7 – Hardware &
+Software
+Requirements; Ch.6 –
+Timeline & Budget
+CLO3
+PLO(k)
+A3
+Innovation
+Combines BanglaBERT, Federated Learning, and Differential
+Privacy into a unified framework for Bangla medical NLP,
+addressing the identified research gap.
+Ch.3.2.3 – Design
+Alternatives &
+Rationale; Ch.1.6 –
+Expected Outcomes
+CLO2
+PLO(c)
+How Complex Engineering Activity attributes (As) are addressed through FedMed-BN, and mapping among As, CLOs, and PLOs
+CEA MAPPING
+20
+
+--- Page 25 ---
+As
+Attribute
+How As is Addressed Through This Research
+Evidence
+CLOs
+PLOs
+A4
+Consequences
+for Society and
+Environment
+Assesses the ethical, legal, and societal impact of privacy-
+preserving healthcare AI by protecting sensitive patient
+information.
+Ch.1.7.1–1.7.2 –
+Societal, Health,
+Safety & Legal
+Impact
+CLO5
+PLO(f)
+Considers sustainability and environmental issues related
+to federated model training and computational resource
+usage.
+Ch.1.7.3 –
+Environmental &
+Sustainability
+Impact
+CLO4
+PLO(g)
+How Complex Engineering Activity attributes (As) are addressed through FedMed-BN, and mapping among As, CLOs, and PLOs
+CEA MAPPING (Cont...)
+21
+
+--- Page 26 ---
+[1] Guang Hu and Xin Fang. Flcmc: Federated learning approach for chinese medicinal text classification. Entropy,
+26(10):871, 2024.
+[2] Milena Milićević, Goran imić, and Dušan Pavlović. Medical prescription classification: An nlp-based approach. In
+Proceedings of the Federated Conference on Computer Science and Information Systems (FedCSIS), volume 18,
+pages 257–261, 2019.
+[3] Dmitriy Dligach and Timothy Miller. Two-stage federated phenotyping and patient representation learning. In
+Proceedings of the 18th BioNLP Workshop, pages 101– 108. Association for Computational Linguistics, 2019.
+[4] Rui Wang, Ricardo Henao, and Lawrence Carin. Personalized federated learning for text classification with
+gradient-free prompt tuning. In Findings of the Association for Computational Linguistics: NAACL 2024, pages 4597–
+4612. Association for Computational Linguistics, 2024.
+[5] Salim Sazzed. Banglabiomed: A biomedical named-entity annotated corpus for bangla (bengali). In Proceedings
+of the 21st Workshop on Biomedical Language Processing, pages 323–329. Association for Computational
+Linguistics, 2022.
+REFERENCES
+22
+
+--- Page 27 ---
+[6] Hongwei Sui, Xiaokang Wang, Junda Liu, and Yu Wang. Training a deep contextualized language model for icd-10
+classification via federated learning: Model development and validation study. JMIR Medical Informatics, 11:e43210,
+2023.
+[7] Jie Zhang, Yang Liu, Wei Liang, and Yanjun Guo. A communication-efficient federated text classification method
+based on parameter pruning. Mathematics, 11(13):2894, 2022. 
+[8] Fatima Al-Mansoori and Ahmed Al-Ali. Federated learning with privacy-preserving big data analytics for
+distributed healthcare systems. Journal of Computer Science and Technology Studies, 7(1):45–56, 2025.
+[9] Xun Li, Jian Wu, and Yu Zhou. Federated learning-based nlp: A systematic literature review. Artificial Intelligence
+Review, 57(4):112, 2024. 
+[10] Yilong Zhao, Chao Chen, and Lin Wang. Privacy-preserving federated learning and its application to natural
+language processing. Knowledge-Based Systems, 265:110354, 2023.
+[11] Nilesh Patel and Deep Shah. Federated learning for privacy-preserving severity classification in healthcare: A
+secure edge-aggregated approach. In Proceedings of the IEEE International Conference on Bioinformatics and
+Biomedicine, pages 1412–1419, 2025.
+REFERENCES (Cont...)
+23
+
+--- Page 28 ---
+[12] Johan van Soest, Michel Dumontier, and Andre Dekker. Advancing privacypreserving health care analytics and
+implementation of the personal health train: Federated deep learning study. JMIR AI, 4:e59123, 2025.
+[13] K. Srinivasa Rao and P. S. N. Murthy. Intelligent community health literacy enhancement using federated natural
+language processing and privacy-preserving deep learning. Polaris: A Collaborative Journal, 3(1):74–85, 2025. 
+[14] Le Peng, Gaoxiang Luo, Sicheng Zhou, Jiandong Chen, Ziyue Xu, Ju Sun, and Rui Zhang. An in-depth evaluation
+of federated learning on biomedical natural language processing for information extraction. npj Digital Medicine,
+7(1):127, 2024.
+[15] Jian Gao, Chen Liang, and Fei Wang. Fedclimask: Context-aware federated learning with ontology-guided
+semantic masking for clinical nlp. In Proceedings of the GlobalNLP Workshop at ACL, pages 34–45. Association for
+Computational Linguistics, 2025.
+REFERENCES (Cont...)
+24
+
+--- Page 29 ---
+THANK YOU
+25
+
+--- Page 30 ---
+Q & A Session 
+26
+
+--- Page 31 ---
+Questionnaire Introduction and
+Evaluator Details (Zakir Hossain)
+Section 1: Correct Application of Subject-
+Specific Concepts
+Section 2: Logical Consistency
+EXPERT CONSULATION EVIDENCE
+27
+
+--- Page 32 ---
+Section 3: Validity and Justification
+Section 4: Innovation and Contribution
+Section 5: Overall Quality
+EXPERT CONSULATION EVIDENCE (Cont...)
+28
+
+--- Page 33 ---
+Questionnaire Introduction and Evaluator Details
+(Shayela Begum)
+Section 1: Correct Application of Subject-
+Specific Concepts
+Section 2: Logical Consistency
+EXPERT CONSULATION EVIDENCE (Cont...)
+29
+
+--- Page 34 ---
+Section 3: Validity and Justification
+Section 4: Innovation and Contribution
+Section 5: Overall Quality
+EXPERT CONSULATION EVIDENCE (Cont...)
+30
+
+--- Page 35 ---
+Questionnaire Introduction and Evaluator Details
+(Nasima Kamal)
+Section 1: Correct Application of Subject-
+Specific Concepts
+Section 2: Logical Consistency
+EXPERT CONSULATION EVIDENCE (Cont...)
+31
+
+--- Page 36 ---
+Section 3: Validity and Justification
+Section 4: Innovation and Contribution
+Section 5: Overall Quality
+EXPERT CONSULATION EVIDENCE (Cont...)
+32
+
